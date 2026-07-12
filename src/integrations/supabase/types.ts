@@ -134,25 +134,34 @@ export type Database = {
       }
       school_rules: {
         Row: {
+          category: string
           created_at: string
           description: string | null
           id: string
           keywords: string[] | null
+          rule_number: number | null
           title: string
+          updated_at: string
         }
         Insert: {
+          category?: string
           created_at?: string
           description?: string | null
           id?: string
           keywords?: string[] | null
+          rule_number?: number | null
           title: string
+          updated_at?: string
         }
         Update: {
+          category?: string
           created_at?: string
           description?: string | null
           id?: string
           keywords?: string[] | null
+          rule_number?: number | null
           title?: string
+          updated_at?: string
         }
         Relationships: []
       }
