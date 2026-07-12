@@ -164,7 +164,7 @@ export const createStudentAccount = createServerFn({ method: "POST" })
   .inputValidator((input) =>
     z.object({
       fullName: z.string().trim().min(1).max(120),
-      rollNumber: z.string().trim().min(1).max(40),
+      rollNumber: z.string().trim().regex(/^\d+$/, "Roll number must contain digits only").min(1).max(40),
       password: z.string().min(6).max(100),
       heightCm: z.number().int().positive().max(300).nullable().optional(),
       role: z.enum(["student", "captain"]).default("student"),
