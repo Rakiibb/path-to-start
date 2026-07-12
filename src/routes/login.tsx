@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { GraduationCap } from "lucide-react";
-import { signIn } from "@/lib/auth";
+import { signInWithCode } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/login")({
@@ -13,14 +13,23 @@ function LoginPage() {
   const [code, setCode] = useState("");
   const [error, setError] = useState("");
 
-  function onSubmit(e: React.FormEvent) {
+  const [loading, setLoading] = useState(false);
+
+  async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
-    const session = signIn(code);
-    if (!session) {
+    if (!code.trim()) {
       setError("Please enter your secret code.");
       return;
     }
-    navigate({ to: "/" });
+    setLoading(true);
+    try {
+      await signInWithCode(code);
+      navigate({ to: "/" });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Sign-in failed");
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -58,9 +67,10 @@ function LoginPage() {
 
           <Button
             type="submit"
+            disabled={loading}
             className="h-11 w-full bg-sky-600 text-white hover:bg-sky-700"
           >
-            Continue
+            {loading ? "Signing in…" : "Continue"}
           </Button>
 
           <p className="text-center text-xs text-gray-400">
