@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated.index'
+import { Route as AuthenticatedStudentManagementRouteImport } from './routes/_authenticated.student-management'
 import { Route as AuthenticatedSosRouteImport } from './routes/_authenticated.sos'
 import { Route as AuthenticatedSeatPlannerRouteImport } from './routes/_authenticated.seat-planner'
 import { Route as AuthenticatedSchoolRulesRouteImport } from './routes/_authenticated.school-rules'
@@ -35,6 +36,12 @@ const AuthenticatedIndexRoute = AuthenticatedIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedStudentManagementRoute =
+  AuthenticatedStudentManagementRouteImport.update({
+    id: '/student-management',
+    path: '/student-management',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedSosRoute = AuthenticatedSosRouteImport.update({
   id: '/sos',
   path: '/sos',
@@ -91,6 +98,7 @@ export interface FileRoutesByFullPath {
   '/school-rules': typeof AuthenticatedSchoolRulesRoute
   '/seat-planner': typeof AuthenticatedSeatPlannerRoute
   '/sos': typeof AuthenticatedSosRoute
+  '/student-management': typeof AuthenticatedStudentManagementRoute
 }
 export interface FileRoutesByTo {
   '/login': typeof LoginRoute
@@ -102,6 +110,7 @@ export interface FileRoutesByTo {
   '/school-rules': typeof AuthenticatedSchoolRulesRoute
   '/seat-planner': typeof AuthenticatedSeatPlannerRoute
   '/sos': typeof AuthenticatedSosRoute
+  '/student-management': typeof AuthenticatedStudentManagementRoute
   '/': typeof AuthenticatedIndexRoute
 }
 export interface FileRoutesById {
@@ -116,6 +125,7 @@ export interface FileRoutesById {
   '/_authenticated/school-rules': typeof AuthenticatedSchoolRulesRoute
   '/_authenticated/seat-planner': typeof AuthenticatedSeatPlannerRoute
   '/_authenticated/sos': typeof AuthenticatedSosRoute
+  '/_authenticated/student-management': typeof AuthenticatedStudentManagementRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
 }
 export interface FileRouteTypes {
@@ -131,6 +141,7 @@ export interface FileRouteTypes {
     | '/school-rules'
     | '/seat-planner'
     | '/sos'
+    | '/student-management'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/login'
@@ -142,6 +153,7 @@ export interface FileRouteTypes {
     | '/school-rules'
     | '/seat-planner'
     | '/sos'
+    | '/student-management'
     | '/'
   id:
     | '__root__'
@@ -155,6 +167,7 @@ export interface FileRouteTypes {
     | '/_authenticated/school-rules'
     | '/_authenticated/seat-planner'
     | '/_authenticated/sos'
+    | '/_authenticated/student-management'
     | '/_authenticated/'
   fileRoutesById: FileRoutesById
 }
@@ -184,6 +197,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof AuthenticatedIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/student-management': {
+      id: '/_authenticated/student-management'
+      path: '/student-management'
+      fullPath: '/student-management'
+      preLoaderRoute: typeof AuthenticatedStudentManagementRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/sos': {
@@ -254,6 +274,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedSchoolRulesRoute: typeof AuthenticatedSchoolRulesRoute
   AuthenticatedSeatPlannerRoute: typeof AuthenticatedSeatPlannerRoute
   AuthenticatedSosRoute: typeof AuthenticatedSosRoute
+  AuthenticatedStudentManagementRoute: typeof AuthenticatedStudentManagementRoute
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
 }
 
@@ -266,6 +287,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedSchoolRulesRoute: AuthenticatedSchoolRulesRoute,
   AuthenticatedSeatPlannerRoute: AuthenticatedSeatPlannerRoute,
   AuthenticatedSosRoute: AuthenticatedSosRoute,
+  AuthenticatedStudentManagementRoute: AuthenticatedStudentManagementRoute,
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
 }
 

@@ -1,4 +1,6 @@
 import { Link, useRouterState } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
+import { getCurrentAppUser } from "@/lib/auth";
 import {
   LayoutDashboard,
   MessageSquare,
@@ -10,6 +12,7 @@ import {
   Bell,
   User,
   GraduationCap,
+  Users,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -25,8 +28,19 @@ const items = [
   { to: "/profile", label: "Profile", icon: User },
 ] as const;
 
+const captainItems = [
+  { to: "/student-management", label: "Student Management", icon: Users },
+] as const;
+
 export function Sidebar() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const { data: session } = useQuery({
+    queryKey: ["me"],
+    queryFn: getCurrentAppUser,
+    staleTime: 60_000,
+  });
+  const isCaptain = session?.role === "captain";
+  const allItems = isCaptain ? [...items, ...captainItems] : items;
 
   return (
     <aside className="hidden md:flex md:w-64 shrink-0 flex-col border-r border-gray-200 bg-white">
@@ -37,7 +51,7 @@ export function Sidebar() {
         <span className="text-lg font-semibold text-gray-900">SmartClass</span>
       </div>
       <nav className="flex-1 space-y-1 p-4">
-        {items.map(({ to, label, icon: Icon }) => {
+        {allItems.map(({ to, label, icon: Icon }) => {
           const active = pathname === to;
           return (
             <Link
