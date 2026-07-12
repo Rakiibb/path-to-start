@@ -15,6 +15,7 @@ import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated.index'
 import { Route as AuthenticatedStudentManagementRouteImport } from './routes/_authenticated.student-management'
 import { Route as AuthenticatedSosRouteImport } from './routes/_authenticated.sos'
+import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated.settings'
 import { Route as AuthenticatedSeatPlannerRouteImport } from './routes/_authenticated.seat-planner'
 import { Route as AuthenticatedSchoolRulesRouteImport } from './routes/_authenticated.school-rules'
 import { Route as AuthenticatedReportsRouteImport } from './routes/_authenticated.reports'
@@ -51,6 +52,11 @@ const AuthenticatedStudentManagementRoute =
 const AuthenticatedSosRoute = AuthenticatedSosRouteImport.update({
   id: '/sos',
   path: '/sos',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
 const AuthenticatedSeatPlannerRoute =
@@ -104,6 +110,7 @@ export interface FileRoutesByFullPath {
   '/reports': typeof AuthenticatedReportsRoute
   '/school-rules': typeof AuthenticatedSchoolRulesRoute
   '/seat-planner': typeof AuthenticatedSeatPlannerRoute
+  '/settings': typeof AuthenticatedSettingsRoute
   '/sos': typeof AuthenticatedSosRoute
   '/student-management': typeof AuthenticatedStudentManagementRoute
 }
@@ -117,6 +124,7 @@ export interface FileRoutesByTo {
   '/reports': typeof AuthenticatedReportsRoute
   '/school-rules': typeof AuthenticatedSchoolRulesRoute
   '/seat-planner': typeof AuthenticatedSeatPlannerRoute
+  '/settings': typeof AuthenticatedSettingsRoute
   '/sos': typeof AuthenticatedSosRoute
   '/student-management': typeof AuthenticatedStudentManagementRoute
   '/': typeof AuthenticatedIndexRoute
@@ -133,6 +141,7 @@ export interface FileRoutesById {
   '/_authenticated/reports': typeof AuthenticatedReportsRoute
   '/_authenticated/school-rules': typeof AuthenticatedSchoolRulesRoute
   '/_authenticated/seat-planner': typeof AuthenticatedSeatPlannerRoute
+  '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/_authenticated/sos': typeof AuthenticatedSosRoute
   '/_authenticated/student-management': typeof AuthenticatedStudentManagementRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
@@ -150,6 +159,7 @@ export interface FileRouteTypes {
     | '/reports'
     | '/school-rules'
     | '/seat-planner'
+    | '/settings'
     | '/sos'
     | '/student-management'
   fileRoutesByTo: FileRoutesByTo
@@ -163,6 +173,7 @@ export interface FileRouteTypes {
     | '/reports'
     | '/school-rules'
     | '/seat-planner'
+    | '/settings'
     | '/sos'
     | '/student-management'
     | '/'
@@ -178,6 +189,7 @@ export interface FileRouteTypes {
     | '/_authenticated/reports'
     | '/_authenticated/school-rules'
     | '/_authenticated/seat-planner'
+    | '/_authenticated/settings'
     | '/_authenticated/sos'
     | '/_authenticated/student-management'
     | '/_authenticated/'
@@ -231,6 +243,13 @@ declare module '@tanstack/react-router' {
       path: '/sos'
       fullPath: '/sos'
       preLoaderRoute: typeof AuthenticatedSosRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/settings': {
+      id: '/_authenticated/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof AuthenticatedSettingsRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/seat-planner': {
@@ -293,6 +312,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedReportsRoute: typeof AuthenticatedReportsRoute
   AuthenticatedSchoolRulesRoute: typeof AuthenticatedSchoolRulesRoute
   AuthenticatedSeatPlannerRoute: typeof AuthenticatedSeatPlannerRoute
+  AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
   AuthenticatedSosRoute: typeof AuthenticatedSosRoute
   AuthenticatedStudentManagementRoute: typeof AuthenticatedStudentManagementRoute
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
@@ -306,6 +326,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedReportsRoute: AuthenticatedReportsRoute,
   AuthenticatedSchoolRulesRoute: AuthenticatedSchoolRulesRoute,
   AuthenticatedSeatPlannerRoute: AuthenticatedSeatPlannerRoute,
+  AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
   AuthenticatedSosRoute: AuthenticatedSosRoute,
   AuthenticatedStudentManagementRoute: AuthenticatedStudentManagementRoute,
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,

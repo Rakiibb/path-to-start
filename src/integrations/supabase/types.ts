@@ -14,6 +14,42 @@ export type Database = {
   }
   public: {
     Tables: {
+      app_settings: {
+        Row: {
+          class_name: string
+          feedback_enabled: boolean
+          id: boolean
+          min_password_length: number
+          require_password_number: boolean
+          require_password_symbol: boolean
+          school_name: string
+          sos_enabled: boolean
+          updated_at: string
+        }
+        Insert: {
+          class_name?: string
+          feedback_enabled?: boolean
+          id?: boolean
+          min_password_length?: number
+          require_password_number?: boolean
+          require_password_symbol?: boolean
+          school_name?: string
+          sos_enabled?: boolean
+          updated_at?: string
+        }
+        Update: {
+          class_name?: string
+          feedback_enabled?: boolean
+          id?: boolean
+          min_password_length?: number
+          require_password_number?: boolean
+          require_password_symbol?: boolean
+          school_name?: string
+          sos_enabled?: boolean
+          updated_at?: string
+        }
+        Relationships: []
+      }
       feedback: {
         Row: {
           amount: number | null
