@@ -8,9 +8,39 @@
 </head>
 <body>
 <div class="app">
-  <aside class="sidebar" id="sidebar"></aside>
+  <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-icon">🎓</div>
+        <div class="brand-name">SmartClass</div>
+      </div>
+      <a href="index.html" class="nav-item"><span class="icon">📊</span><span>Dashboard</span></a>
+      <a href="captain-feedback.html" class="nav-item"><span class="icon">🛡️</span><span>Captain Feedback</span></a>
+      <a href="seat-planner.html" class="nav-item"><span class="icon">🪑</span><span>Seat Planner</span></a>
+      <a href="sos.html" class="nav-item"><span class="icon">🚨</span><span>SOS</span></a>
+      <a href="school-rules.html" class="nav-item"><span class="icon">📖</span><span>School Rules</span></a>
+      <a href="notifications.html" class="nav-item active"><span class="icon">🔔</span><span>Notifications</span></a>
+      <a href="ai-syllabus.html" class="nav-item"><span class="icon">✨</span><span>AI Syllabus</span></a>
+      <a href="profile.html" class="nav-item"><span class="icon">👤</span><span>Profile</span></a>
+      <a href="student-management.html" class="nav-item"><span class="icon">👥</span><span>Student Management</span></a>
+    </aside>
   <div class="main">
-    <header class="navbar" id="navbar"></header>
+    <header class="navbar">
+      <div>
+        <div class="subtitle">SmartClass</div>
+        <div class="title">Notifications</div>
+      </div>
+      <div class="right">
+        <button class="sos-btn" onclick="location.href='sos.html'"><span>⚠️</span> SOS</button>
+        <a href="notifications.html" class="btn outline small" title="Notifications">🔔</a>
+        <div class="row" style="border:1px solid var(--border);border-radius:10px;padding:4px 10px 4px 4px;gap:8px;">
+          <div class="avatar">AR</div>
+          <div>
+            <div style="font-size:13px;font-weight:500;">Ashfaq Rahman</div>
+            <div class="text-xs text-muted" style="text-transform:capitalize;">captain</div>
+          </div>
+        </div>
+      </div>
+    </header>
     <div class="content">
       <div class="page-header">
         <div class="row between">
@@ -25,7 +55,6 @@
 <script src="js/data.js"></script>
 <script src="js/app.js"></script>
 <script>
-renderLayout("Notifications");
 function render() {
   document.getElementById("list").innerHTML = DB.notifications.length ? DB.notifications.map(n => `
     <div class="notif ${n.read ? '' : 'unread'}" onclick="mark('${n.id}')">
