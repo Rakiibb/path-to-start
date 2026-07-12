@@ -282,6 +282,17 @@ export type Database = {
         Args: { _role: Database["public"]["Enums"]["app_role"] }
         Returns: boolean
       }
+      list_seat_roster: {
+        Args: never
+        Returns: {
+          full_name: string
+          height_cm: number
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          roll_number: string
+          secret_code: string
+        }[]
+      }
       recompute_feedback_status: {
         Args: { _feedback_id: string }
         Returns: undefined
