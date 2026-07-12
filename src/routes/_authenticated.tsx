@@ -1,6 +1,6 @@
-import { createFileRoute, Outlet, redirect, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Outlet, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { getSession, type Session } from "@/lib/auth";
+import { getCurrentAppUser, type Session } from "@/lib/auth";
 import { Sidebar } from "@/components/smartclass/Sidebar";
 import { Navbar } from "@/components/smartclass/Navbar";
 
@@ -14,13 +14,19 @@ function AuthenticatedLayout() {
   const [checked, setChecked] = useState(false);
 
   useEffect(() => {
-    const s = getSession();
-    if (!s) {
-      navigate({ to: "/login", replace: true });
-      return;
-    }
-    setSession(s);
-    setChecked(true);
+    let cancelled = false;
+    getCurrentAppUser().then((s) => {
+      if (cancelled) return;
+      if (!s) {
+        navigate({ to: "/login", replace: true });
+        return;
+      }
+      setSession(s);
+      setChecked(true);
+    });
+    return () => {
+      cancelled = true;
+    };
   }, [navigate]);
 
   if (!checked) {
