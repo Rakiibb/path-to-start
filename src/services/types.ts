@@ -19,6 +19,7 @@ export type Notification = Tables<"notifications">;
 
 export type SchoolRule = Tables<"school_rules">;
 export type SchoolRuleInsert = TablesInsert<"school_rules">;
+export type SchoolRuleUpdate = TablesUpdate<"school_rules">;
 
 export type SeatStudent = Tables<"seat_students">;
 export type SeatStudentInsert = TablesInsert<"seat_students">;
