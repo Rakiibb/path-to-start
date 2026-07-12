@@ -17,7 +17,7 @@ import { cn } from "@/lib/utils";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 
-const CATEGORIES = ["Academic", "Behavior", "Leadership", "Fund Issue", "Communication", "Other"] as const;
+const CATEGORIES = ["Academic", "Behavior", "Leadership", "Fund Issue", "Communication", "Tiffin Tax", "Other"] as const;
 
 const schema = z.object({
   target_captain_id: z.string().uuid("Select a captain"),
