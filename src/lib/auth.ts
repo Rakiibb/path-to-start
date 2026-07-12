@@ -13,9 +13,12 @@ export type Session = {
 // Supabase session on the client so RLS-protected queries work.
 export async function signInWithCode(
   rollNumber: string,
+  password: string,
   secretCode: string,
-): Promise<Session> {
-  const result = await loginWithSecretCode({ data: { rollNumber, secretCode } });
+): Promise<Session & { firstLogin: boolean }> {
+  const result = await loginWithSecretCode({
+    data: { rollNumber, password, secretCode },
+  });
   const { error } = await supabase.auth.setSession({
     access_token: result.access_token,
     refresh_token: result.refresh_token,
@@ -25,6 +28,7 @@ export async function signInWithCode(
     id: result.user.id,
     role: result.user.role as Role,
     name: result.user.full_name,
+    firstLogin: result.firstLogin,
   };
 }
 
