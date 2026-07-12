@@ -87,12 +87,6 @@
           </div>
           <div class="row" style="gap:8px;">
             <input class="input" id="fb-search" placeholder="Search title or description..." style="min-width:220px;" />
-            <select class="select" id="fb-filter-status">
-              <option value="">All statuses</option>
-              <option>Pending</option>
-              <option>Verified</option>
-              <option>Rejected</option>
-            </select>
           </div>
         </div>
         <div id="all-feedback-list"></div>
@@ -200,9 +194,7 @@ render();
 
 function renderAllFeedback() {
   const q = (document.getElementById("fb-search").value || "").trim().toLowerCase();
-  const st = document.getElementById("fb-filter-status").value;
   const list = DB.feedback
-    .filter(f => !st || f.status === st)
     .filter(f => !q ||
       (f.title || "").toLowerCase().includes(q) ||
       (f.description || "").toLowerCase().includes(q))
@@ -217,10 +209,7 @@ function renderAllFeedback() {
     const cap = DB.captains.find(c => c.id === f.captainId);
     return `
       <div class="fb-item">
-        <div class="row between">
-          <h4>${f.title}</h4>
-          <span class="badge ${f.status.toLowerCase()}">${f.status}</span>
-        </div>
+        <h4>${f.title}</h4>
         <div class="meta">
           <span>👤 About <b>${cap ? cap.name : 'Unknown'}</b></span>
           ${f.category ? `<span class="badge gray">${f.category}</span>` : ''}
@@ -232,7 +221,6 @@ function renderAllFeedback() {
   }).join("");
 }
 document.getElementById("fb-search").addEventListener("input", renderAllFeedback);
-document.getElementById("fb-filter-status").addEventListener("change", renderAllFeedback);
 
 // Re-render the list whenever new feedback is submitted.
 const _origRender = render;
