@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Dashboard — SmartClass</title>
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main">
+    <header class="navbar" id="navbar"></header>
+    <div class="content">
+      <div class="page-header">
+        <h1>Welcome back, <span id="uname"></span> 👋</h1>
+        <p>Here's what's happening in your classroom today.</p>
+      </div>
+
+      <div class="grid cols-4 mb-4">
+        <div class="card stat-card"><div class="label">Total Feedback</div><div class="value" id="s-total"></div></div>
+        <div class="card stat-card"><div class="label">Verified</div><div class="value" id="s-verified"></div></div>
+        <div class="card stat-card"><div class="label">Pending</div><div class="value" id="s-pending"></div></div>
+        <div class="card stat-card"><div class="label">Red Alerts</div><div class="value" id="s-red" style="color:var(--red);"></div></div>
+      </div>
+
+      <div class="grid cols-2">
+        <div class="card">
+          <h3 class="mb-4">Recent Captain Feedback</h3>
+          <div id="recent-fb"></div>
+        </div>
+        <div class="card">
+          <h3 class="mb-4">Latest Notifications</h3>
+          <div id="recent-notif"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="js/data.js"></script>
+<script src="js/app.js"></script>
+<script>
+renderLayout("Dashboard");
+document.getElementById("uname").textContent = DB.user.name.split(" ")[0];
+document.getElementById("s-total").textContent = DB.feedback.length;
+document.getElementById("s-verified").textContent = DB.feedback.filter(f => f.status === "Verified").length;
+document.getElementById("s-pending").textContent = DB.feedback.filter(f => f.status === "Pending").length;
+
+const verifiedByCap = {};
+DB.feedback.filter(f => f.status === "Verified").forEach(f => {
+  verifiedByCap[f.captainId] = (verifiedByCap[f.captainId] || 0) + 1;
+});
+const reds = Object.values(verifiedByCap).filter(n => n >= 3).length;
+document.getElementById("s-red").textContent = reds;
+
+document.getElementById("recent-fb").innerHTML = DB.feedback.slice(0,4).map(f => {
+  const cap = DB.captains.find(c => c.id === f.captainId)?.name || "Unknown";
+  return `<div class="fb-item">
+    <div class="row between">
+      <h4>${f.title}</h4>
+      <span class="badge ${f.status.toLowerCase()}">${f.status}</span>
+    </div>
+    <div class="meta">About ${cap} · ${timeAgo(f.createdAt)}</div>
+  </div>`;
+}).join("") || '<p class="text-muted text-sm">No feedback yet.</p>';
+
+document.getElementById("recent-notif").innerHTML = DB.notifications.slice(0,4).map(n => `
+  <div class="notif ${n.read ? "" : "unread"}">
+    <div class="icon-wrap">🔔</div>
+    <div class="body">
+      <h4>${n.title}</h4>
+      <p>${n.message}</p>
+      <div class="time">${timeAgo(n.createdAt)}</div>
+    </div>
+  </div>
+`).join("");
+</script>
+</body>
+</html>

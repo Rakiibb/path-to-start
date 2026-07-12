@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Profile — SmartClass</title>
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main">
+    <header class="navbar" id="navbar"></header>
+    <div class="content">
+      <div class="page-header"><h1>My Profile</h1><p>Update your personal information.</p></div>
+      <div class="card" style="max-width:520px;">
+        <div class="row mb-4" style="gap:16px;">
+          <div class="avatar" style="width:64px;height:64px;font-size:22px;" id="avatar-big"></div>
+          <div>
+            <div style="font-weight:600;font-size:16px;" id="p-name"></div>
+            <div class="text-muted text-sm" style="text-transform:capitalize;" id="p-role"></div>
+          </div>
+        </div>
+        <form id="pf">
+          <div class="field"><label>Full Name</label><input class="input" name="name" required /></div>
+          <div class="field"><label>Roll Number</label><input class="input" name="roll" /></div>
+          <div class="field">
+            <label>Role</label>
+            <select class="select" name="role">
+              <option value="student">Student</option>
+              <option value="captain">Captain</option>
+            </select>
+          </div>
+          <button class="btn">Save Changes</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="js/data.js"></script>
+<script src="js/app.js"></script>
+<script>
+renderLayout("Profile");
+function fill() {
+  document.getElementById("avatar-big").textContent = initials(DB.user.name);
+  document.getElementById("p-name").textContent = DB.user.name;
+  document.getElementById("p-role").textContent = DB.user.role;
+  const f = document.getElementById("pf");
+  f.name.value = DB.user.name; f.roll.value = DB.user.roll; f.role.value = DB.user.role;
+}
+document.getElementById("pf").addEventListener("submit", e => {
+  e.preventDefault();
+  const fd = new FormData(e.target);
+  DB.user.name = fd.get("name"); DB.user.roll = fd.get("roll"); DB.user.role = fd.get("role");
+  saveData(DB); fill(); renderLayout("Profile"); toast("Profile updated.");
+});
+fill();
+</script>
+</body>
+</html>

@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Seat Planner — SmartClass</title>
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main">
+    <header class="navbar" id="navbar"></header>
+    <div class="content">
+      <div class="page-header">
+        <h1>Seat Planner</h1>
+        <p>Click a seat to assign a student. Click again to remove.</p>
+      </div>
+      <div class="card">
+        <div class="row mb-4" style="gap:16px;">
+          <span class="row"><span class="seat" style="width:20px;height:20px;aspect-ratio:unset;"></span>&nbsp;Empty</span>
+          <span class="row"><span class="seat occupied" style="width:20px;height:20px;aspect-ratio:unset;"></span>&nbsp;Occupied</span>
+          <button class="btn outline small" style="margin-left:auto;" onclick="clearAll()">Clear All</button>
+        </div>
+        <div style="background:#f8fafc;padding:16px;border-radius:10px;text-align:center;margin-bottom:16px;font-size:12px;color:var(--muted);">
+          🖥️ TEACHER
+        </div>
+        <div class="seat-grid" id="seat-grid"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="dialog-backdrop" id="dlg">
+  <div class="dialog" style="max-width:400px;">
+    <div class="dialog-header">
+      <h2>Assign Seat</h2>
+      <button class="close-btn" onclick="closeDialog()">×</button>
+    </div>
+    <select class="select mb-4" id="student-select"></select>
+    <div class="row" style="justify-content:flex-end;gap:8px;">
+      <button class="btn outline" onclick="closeDialog()">Cancel</button>
+      <button class="btn" onclick="assignSeat()">Assign</button>
+    </div>
+  </div>
+</div>
+
+<script src="js/data.js"></script>
+<script src="js/app.js"></script>
+<script>
+renderLayout("Seat Planner");
+const TOTAL_SEATS = 24;
+let currentSeat = null;
+
+function render() {
+  const grid = document.getElementById("seat-grid");
+  grid.innerHTML = Array.from({length: TOTAL_SEATS}, (_, i) => {
+    const n = i + 1;
+    const sid = DB.seatMap[n];
+    const student = sid ? DB.students.find(s => s.id === sid) : null;
+    return `<div class="seat ${student ? 'occupied' : ''}" onclick="pickSeat(${n})">
+      <div class="text-muted" style="font-size:10px;">${n}</div>
+      ${student ? `<div class="roll">${student.roll}</div><div style="font-size:10px;">${student.name.split(' ')[0]}</div>` : ''}
+    </div>`;
+  }).join("");
+}
+
+function pickSeat(n) {
+  if (DB.seatMap[n]) {
+    if (confirm("Remove student from this seat?")) {
+      delete DB.seatMap[n]; saveData(DB); render();
+    }
+    return;
+  }
+  currentSeat = n;
+  const assigned = new Set(Object.values(DB.seatMap));
+  const available = DB.students.filter(s => !assigned.has(s.id));
+  const sel = document.getElementById("student-select");
+  if (available.length === 0) { toast("No available students."); return; }
+  sel.innerHTML = available.map(s => `<option value="${s.id}">${s.roll} — ${s.name}</option>`).join("");
+  document.getElementById("dlg").classList.add("open");
+}
+function assignSeat() {
+  const sid = document.getElementById("student-select").value;
+  DB.seatMap[currentSeat] = sid;
+  saveData(DB); closeDialog(); render();
+  toast("Seat assigned.");
+}
+function closeDialog() { document.getElementById("dlg").classList.remove("open"); }
+function clearAll() {
+  if (confirm("Clear all seat assignments?")) {
+    DB.seatMap = {}; saveData(DB); render();
+  }
+}
+render();
+</script>
+</body>
+</html>

@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>SOS — SmartClass</title>
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main">
+    <header class="navbar" id="navbar"></header>
+    <div class="content">
+      <div class="page-header">
+        <h1>🚨 SOS Emergency</h1>
+        <p>Trigger an emergency alert to notify all captains immediately.</p>
+      </div>
+
+      <div class="card mb-4" style="border-color:#fca5a5;background:#fef2f2;">
+        <div class="field">
+          <label>Emergency Message</label>
+          <textarea class="textarea" id="sos-msg" placeholder="Describe the emergency..."></textarea>
+        </div>
+        <button class="btn danger" onclick="triggerSOS()">🚨 Trigger SOS Alert</button>
+      </div>
+
+      <div class="card">
+        <h3 class="mb-4">SOS History</h3>
+        <div id="sos-list"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="js/data.js"></script>
+<script src="js/app.js"></script>
+<script>
+renderLayout("SOS");
+
+function render() {
+  document.getElementById("sos-list").innerHTML = DB.sos.length ? DB.sos
+    .slice().sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt))
+    .map(s => `
+      <div class="fb-item">
+        <div class="row between">
+          <h4>${s.message}</h4>
+          <span class="badge ${s.status === 'Resolved' ? 'verified' : 'red'}">${s.status}</span>
+        </div>
+        <div class="meta">🕒 ${fmtDateTime(s.createdAt)}</div>
+        ${s.status !== 'Resolved' ? `<button class="btn small outline mt-4" onclick="resolve('${s.id}')">Mark Resolved</button>` : ''}
+      </div>
+    `).join("") : '<p class="text-muted text-sm">No SOS requests.</p>';
+}
+function triggerSOS() {
+  const msg = document.getElementById("sos-msg").value.trim();
+  if (!msg) { toast("Please describe the emergency."); return; }
+  DB.sos.unshift({ id: uid("sos"), message: msg, status: "Active", createdAt: new Date().toISOString() });
+  DB.notifications.unshift({
+    id: uid("n"), title: "🚨 Emergency Alert", message: "A student needs immediate assistance.",
+    category: "SOS", read: false, createdAt: new Date().toISOString(),
+  });
+  saveData(DB);
+  document.getElementById("sos-msg").value = "";
+  render();
+  toast("SOS alert triggered.");
+}
+function resolve(id) {
+  const s = DB.sos.find(x => x.id === id);
+  if (s) { s.status = "Resolved"; saveData(DB); render(); toast("SOS resolved."); }
+}
+render();
+</script>
+</body>
+</html>
