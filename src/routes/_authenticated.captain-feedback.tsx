@@ -117,9 +117,9 @@ function CaptainCard({ s }: { s: Stats }) {
   return (
     <div
       className={cn(
-        "group relative rounded-2xl border bg-card p-5 shadow-soft transition hover:-translate-y-0.5 hover:shadow-lift",
+        "group relative rounded-2xl border bg-card p-6 shadow-soft card-hover",
         t.border,
-        isRed && "animate-red-alert",
+        isRed && "animate-red-alert glow-red",
       )}
     >
       <div className="flex items-start gap-4">
