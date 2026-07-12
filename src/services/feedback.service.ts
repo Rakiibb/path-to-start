@@ -53,3 +53,12 @@ export async function getMyLastFeedback(): Promise<Feedback | null> {
   if (error) throw error;
   return data;
 }
+
+export async function listAllFeedback(): Promise<Feedback[]> {
+  const { data, error } = await supabase
+    .from("feedback")
+    .select("*")
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+  return data ?? [];
+}
