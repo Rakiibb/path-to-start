@@ -22,7 +22,6 @@ function LoginPage() {
     setError("");
     if (!rollNumber.trim()) return setError("Please enter your Roll Number.");
     if (!password) return setError("Please enter your Password.");
-    if (!code.trim()) return setError("Please enter your Secret Code.");
     setLoading(true);
     try {
       const session = await signInWithCode(rollNumber, password, code);
@@ -47,7 +46,7 @@ function LoginPage() {
           </div>
           <h1 className="mt-4 text-2xl font-semibold text-gray-900">Welcome to SmartClass</h1>
           <p className="mt-1 text-sm text-gray-500">
-            Sign in with your Roll Number, Password and Secret Code.
+            Sign in with your Roll Number and Password. Secret Code only required on first login.
           </p>
         </div>
 
@@ -67,10 +66,12 @@ function LoginPage() {
           </div>
 
           <div>
-            <label htmlFor="code" className="block text-sm font-medium text-gray-700">Secret Code</label>
+            <label htmlFor="code" className="block text-sm font-medium text-gray-700">
+              Secret Code <span className="text-gray-400">(first login only)</span>
+            </label>
             <input id="code" type="text" autoComplete="off" value={code}
               onChange={(e) => { setCode(e.target.value); setError(""); }}
-              placeholder="e.g. rahim007" className={input} />
+              placeholder="Leave blank if already set" className={input} />
             <p className="mt-1 text-xs text-gray-400">
               First-time users: pick a unique handle (4–20 chars, letters / numbers / _ / .).
             </p>
