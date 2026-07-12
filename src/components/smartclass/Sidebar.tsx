@@ -5,7 +5,6 @@ import { getCurrentAppUser } from "@/lib/auth";
 import {
   LayoutDashboard,
   MessageSquare,
-  MessagesSquare,
   ShieldAlert,
   LayoutGrid,
   FileBarChart,
@@ -24,7 +23,6 @@ import { cn } from "@/lib/utils";
 const items = [
   { to: "/", label: "Dashboard", icon: LayoutDashboard },
   { to: "/class-feedback", label: "Class Feedback", icon: MessageSquare },
-  { to: "/feedback", label: "Feedback", icon: MessagesSquare },
   { to: "/captain-feedback", label: "Captain Feedback", icon: ShieldAlert },
   { to: "/seat-planner", label: "Seat Planner", icon: LayoutGrid },
   { to: "/reports", label: "Reports", icon: FileBarChart },
