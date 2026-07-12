@@ -31,6 +31,15 @@ async function fetchAllVotes(): Promise<FeedbackVote[]> {
   return data ?? [];
 }
 
+async function fetchIdentities(ids: string[]): Promise<Map<string, string>> {
+  if (ids.length === 0) return new Map();
+  const { data, error } = await supabase.rpc("get_user_identities", { _ids: ids });
+  if (error) throw error;
+  const map = new Map<string, string>();
+  for (const row of data ?? []) map.set(row.id, row.secret_code);
+  return map;
+}
+
 function FeedbackPage() {
   const qc = useQueryClient();
   const [search, setSearch] = useState("");
@@ -44,6 +53,16 @@ function FeedbackPage() {
   const meQuery = useQuery({ queryKey: ["me"], queryFn: getMe });
   const feedbackQuery = useQuery({ queryKey: ["feedback-all"], queryFn: listAllFeedback });
   const votesQuery = useQuery({ queryKey: ["votes-all"], queryFn: fetchAllVotes });
+
+  const authorIds = useMemo(
+    () => Array.from(new Set((feedbackQuery.data ?? []).map((f) => f.created_by))),
+    [feedbackQuery.data],
+  );
+  const identitiesQuery = useQuery({
+    queryKey: ["identities", authorIds],
+    queryFn: () => fetchIdentities(authorIds),
+    enabled: authorIds.length > 0,
+  });
 
   // Realtime subscription.
   useEffect(() => {
@@ -168,6 +187,7 @@ function FeedbackPage() {
                 feedback={f}
                 votes={votesByFeedback.get(f.id) ?? []}
                 currentUserId={me?.id ?? null}
+                authorHandle={identitiesQuery.data?.get(f.created_by) ?? null}
                 onVote={(v) => handleVote(f, v)}
                 onEdit={() => setEditing(f)}
                 onDelete={() => setConfirmDelete(f)}
