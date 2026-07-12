@@ -82,10 +82,14 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "description", content: "SmartClass is a clean, modern classroom management platform for teachers and students." },
       { name: "author", content: "SmartClass" },
       { property: "og:title", content: "SmartClass — Classroom Management" },
-      { property: "og:description", content: "A clean, modern classroom management platform for teachers and students." },
+      { property: "og:description", content: "SmartClass is a clean, modern classroom management platform for teachers and students." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:site", content: "@Lovable" },
+      { name: "twitter:title", content: "SmartClass — Classroom Management" },
+      { name: "twitter:description", content: "SmartClass is a clean, modern classroom management platform for teachers and students." },
+      { property: "og:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/26dc5a0e-2c5a-43e6-b844-b3276266378e" },
+      { name: "twitter:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/26dc5a0e-2c5a-43e6-b844-b3276266378e" },
     ],
     links: [
       {
