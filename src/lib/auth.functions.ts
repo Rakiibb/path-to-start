@@ -198,17 +198,33 @@ export const loginWithFixedAccount = createServerFn({ method: "POST" })
       throw new Error("Invalid ID or password.");
     }
 
-    let { data: user, error: userErr } = await supabaseAdmin
+    const fixedUserSelect = "id, auth_user_id, full_name, role";
+    let fixedUser: {
+      id: string;
+      auth_user_id: string;
+      full_name: string;
+      role: "student" | "captain";
+    } | null = null;
+
+    const fetchedUser = await supabaseAdmin
       .from("users")
-      .select("id, auth_user_id, full_name, role")
+      .select(fixedUserSelect)
       .eq("secret_code", account.secretCode)
       .not("auth_user_id", "is", null)
       .limit(1)
       .maybeSingle();
 
-    if (userErr) throw new Error(userErr.message);
+    if (fetchedUser.error) throw new Error(fetchedUser.error.message);
+    if (fetchedUser.data?.auth_user_id) {
+      fixedUser = {
+        id: fetchedUser.data.id,
+        auth_user_id: fetchedUser.data.auth_user_id,
+        full_name: fetchedUser.data.full_name,
+        role: fetchedUser.data.role,
+      };
+    }
 
-    if (!user) {
+    if (!fixedUser) {
       const id = crypto.randomUUID();
       const email = `user-${id}@smartclass.local`;
       const authPw = `sc_${id}_${process.env.SUPABASE_SERVICE_ROLE_KEY?.slice(-16) ?? "local"}`;
@@ -233,7 +249,7 @@ export const loginWithFixedAccount = createServerFn({ method: "POST" })
           role: account.role,
           is_demo: true,
         })
-        .select("id, auth_user_id, full_name, role")
+        .select(fixedUserSelect)
         .single();
 
       if (inserted.error) {
@@ -241,29 +257,39 @@ export const loginWithFixedAccount = createServerFn({ method: "POST" })
         if (inserted.error.code !== "23505") throw new Error(inserted.error.message);
         const existing = await supabaseAdmin
           .from("users")
-          .select("id, auth_user_id, full_name, role")
+          .select(fixedUserSelect)
           .eq("secret_code", account.secretCode)
           .not("auth_user_id", "is", null)
           .limit(1)
           .maybeSingle();
-        if (existing.error || !existing.data) {
+        if (existing.error || !existing.data?.auth_user_id) {
           throw new Error(existing.error?.message ?? "Could not prepare account.");
         }
-        user = existing.data;
+        fixedUser = {
+          id: existing.data.id,
+          auth_user_id: existing.data.auth_user_id,
+          full_name: existing.data.full_name,
+          role: existing.data.role,
+        };
       } else {
-        user = inserted.data;
+        if (!inserted.data.auth_user_id) throw new Error("Could not prepare account.");
+        fixedUser = {
+          id: inserted.data.id,
+          auth_user_id: inserted.data.auth_user_id,
+          full_name: inserted.data.full_name,
+          role: inserted.data.role,
+        };
       }
     }
 
+    const user = fixedUser;
     const email = `user-${user.id}@smartclass.local`;
     const authPw = `sc_${user.id}_${process.env.SUPABASE_SERVICE_ROLE_KEY?.slice(-16) ?? "local"}`;
 
-    if (user.auth_user_id) {
-      await supabaseAdmin.auth.admin.updateUserById(user.auth_user_id, {
-        password: authPw,
-        user_metadata: { app_user_id: user.id, role: user.role },
-      });
-    }
+    await supabaseAdmin.auth.admin.updateUserById(user.auth_user_id, {
+      password: authPw,
+      user_metadata: { app_user_id: user.id, role: user.role },
+    });
 
     const authClient = createClient(
       process.env.SUPABASE_URL!,
