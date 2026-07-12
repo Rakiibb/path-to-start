@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Search } from "lucide-react";
+import { Search, FileDown } from "lucide-react";
 import { PageLayout } from "@/components/smartclass/PageLayout";
 import { FeedbackCard } from "@/components/smartclass/feedback/FeedbackCard";
 import { EditFeedbackDialog } from "@/components/smartclass/feedback/EditFeedbackDialog";
@@ -11,6 +11,7 @@ import { getMe } from "@/services/users.service";
 import { deleteFeedback, listAllFeedback } from "@/services/feedback.service";
 import { castVote } from "@/services/votes.service";
 import type { Feedback, FeedbackVote } from "@/services/types";
+import { exportCsv, formatDate } from "@/lib/export";
 
 const CATEGORIES = [
   "All",
@@ -164,6 +165,27 @@ function FeedbackPage() {
               <input type="checkbox" checked={mineOnly} onChange={(e) => setMineOnly(e.target.checked)} className="h-4 w-4 accent-sky-600" />
               My Feedback
             </label>
+            <button
+              type="button"
+              disabled={filtered.length === 0}
+              onClick={() =>
+                exportCsv(
+                  "feedback",
+                  ["Title", "Description", "Category", "Status", "Amount", "Created At"],
+                  filtered.map((f) => [
+                    f.title,
+                    f.description ?? "",
+                    f.category ?? "General",
+                    f.status,
+                    f.amount ?? "",
+                    formatDate(f.created_at),
+                  ]),
+                )
+              }
+              className="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              <FileDown size={16} /> Export CSV
+            </button>
           </div>
         </div>
       </div>

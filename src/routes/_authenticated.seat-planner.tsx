@@ -16,6 +16,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Printer, FileDown, RotateCcw, Sparkles } from "lucide-react";
+import { exportPdf, formatDate } from "@/lib/export";
 
 export const Route = createFileRoute("/_authenticated/seat-planner")({
   component: SeatPlannerPage,
@@ -102,6 +103,30 @@ function SeatPlannerPage() {
 
   const handlePrint = () => window.print();
 
+  const handleExportPdf = () => {
+    const rows = seats.map((s, i) => [
+      String(i + 1).padStart(2, "0"),
+      s?.roll_number ?? "—",
+      s?.full_name ?? "Empty Seat",
+      s?.secret_code ? `@${s.secret_code}` : "—",
+      s?.height_cm ? `${s.height_cm} cm` : "—",
+      s?.role ?? "—",
+    ]);
+    exportPdf({
+      filename: "seat-plan",
+      title: "Seat Planner",
+      subtitle: `Layout: ${layout.rows} rows × ${layout.cols} cols · ${sorted.length} student(s) · ${formatDate(new Date())}`,
+      orientation: "landscape",
+      sections: [
+        {
+          heading: "Seating Arrangement (front → back, sorted by height)",
+          columns: ["Seat", "Roll No.", "Full Name", "Secret Code", "Height", "Role"],
+          rows,
+        },
+      ],
+    });
+  };
+
   return (
     <PageLayout
       title="Seat Planner"
@@ -167,7 +192,7 @@ function SeatPlannerPage() {
             <Button variant="outline" onClick={handlePrint}>
               <Printer className="mr-2 h-4 w-4" /> Print
             </Button>
-            <Button variant="outline" onClick={handlePrint}>
+            <Button variant="outline" onClick={handleExportPdf}>
               <FileDown className="mr-2 h-4 w-4" /> Export PDF
             </Button>
           </div>
