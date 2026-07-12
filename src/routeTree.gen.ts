@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as LandingRouteImport } from './routes/landing'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated.index'
 import { Route as AuthenticatedStudentManagementRouteImport } from './routes/_authenticated.student-management'
@@ -25,6 +26,11 @@ import { Route as AuthenticatedClassFeedbackRouteImport } from './routes/_authen
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LandingRoute = LandingRouteImport.update({
+  id: '/landing',
+  path: '/landing',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedRoute = AuthenticatedRouteImport.update({
@@ -89,6 +95,7 @@ const AuthenticatedClassFeedbackRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof AuthenticatedIndexRoute
+  '/landing': typeof LandingRoute
   '/login': typeof LoginRoute
   '/class-feedback': typeof AuthenticatedClassFeedbackRoute
   '/feedback': typeof AuthenticatedFeedbackRoute
@@ -101,6 +108,7 @@ export interface FileRoutesByFullPath {
   '/student-management': typeof AuthenticatedStudentManagementRoute
 }
 export interface FileRoutesByTo {
+  '/landing': typeof LandingRoute
   '/login': typeof LoginRoute
   '/class-feedback': typeof AuthenticatedClassFeedbackRoute
   '/feedback': typeof AuthenticatedFeedbackRoute
@@ -116,6 +124,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_authenticated': typeof AuthenticatedRouteWithChildren
+  '/landing': typeof LandingRoute
   '/login': typeof LoginRoute
   '/_authenticated/class-feedback': typeof AuthenticatedClassFeedbackRoute
   '/_authenticated/feedback': typeof AuthenticatedFeedbackRoute
@@ -132,6 +141,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/landing'
     | '/login'
     | '/class-feedback'
     | '/feedback'
@@ -144,6 +154,7 @@ export interface FileRouteTypes {
     | '/student-management'
   fileRoutesByTo: FileRoutesByTo
   to:
+    | '/landing'
     | '/login'
     | '/class-feedback'
     | '/feedback'
@@ -158,6 +169,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/_authenticated'
+    | '/landing'
     | '/login'
     | '/_authenticated/class-feedback'
     | '/_authenticated/feedback'
@@ -173,6 +185,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
+  LandingRoute: typeof LandingRoute
   LoginRoute: typeof LoginRoute
 }
 
@@ -183,6 +196,13 @@ declare module '@tanstack/react-router' {
       path: '/login'
       fullPath: '/login'
       preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/landing': {
+      id: '/landing'
+      path: '/landing'
+      fullPath: '/landing'
+      preLoaderRoute: typeof LandingRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated': {
@@ -297,6 +317,7 @@ const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
 
 const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRoute: AuthenticatedRouteWithChildren,
+  LandingRoute: LandingRoute,
   LoginRoute: LoginRoute,
 }
 export const routeTree = rootRouteImport
