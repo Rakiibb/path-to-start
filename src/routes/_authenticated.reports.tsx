@@ -34,9 +34,12 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { FileDown, FileText } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { listAllFeedback } from "@/services/feedback.service";
 import type { Feedback } from "@/services/types";
+import { exportCsv, exportPdf, formatDate } from "@/lib/export";
 
 export const Route = createFileRoute("/_authenticated/reports")({
   component: ReportsPage,
@@ -237,6 +240,71 @@ function ReportsPage() {
             <SelectItem value="all">All Time</SelectItem>
           </SelectContent>
         </Select>
+        <div className="ml-auto flex gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={scoped.length === 0}
+            onClick={() =>
+              exportCsv(
+                "reports",
+                ["Title", "Category", "Status", "Amount", "Created At"],
+                scoped.map((f) => [
+                  f.title,
+                  f.category ?? "General",
+                  f.status,
+                  f.amount ?? "",
+                  formatDate(f.created_at),
+                ]),
+              )
+            }
+          >
+            <FileDown className="mr-2 h-4 w-4" /> Export CSV
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={scoped.length === 0}
+            onClick={() =>
+              exportPdf({
+                filename: "reports",
+                title: "SmartClass Reports",
+                subtitle: `Range: ${range === "all" ? "All Time" : range.toUpperCase()} · ${scoped.length} feedback item(s)`,
+                sections: [
+                  {
+                    heading: "Summary",
+                    columns: ["Metric", "Value"],
+                    rows: [
+                      ["Total Feedback", totals.total],
+                      ["Pending", totals.pending],
+                      ["Verified", totals.verified],
+                      ["Fund Reports", totals.fundCount],
+                      ["Total Reported Fund (Tk)", totals.fundAmount.toLocaleString()],
+                      ["Average per Fund Report (Tk)", totals.fundAvg.toFixed(2)],
+                    ],
+                  },
+                  {
+                    heading: "By Category",
+                    columns: ["Category", "Count"],
+                    rows: categoryData.map((c) => [c.name, c.value]),
+                  },
+                  {
+                    heading: "Feedback",
+                    columns: ["Title", "Category", "Status", "Date"],
+                    rows: scoped.map((f) => [
+                      f.title,
+                      f.category ?? "General",
+                      f.status,
+                      formatDate(f.created_at),
+                    ]),
+                  },
+                ],
+              })
+            }
+          >
+            <FileText className="mr-2 h-4 w-4" /> Export PDF
+          </Button>
+        </div>
       </div>
 
       {!hasData ? (
