@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { getCurrentAppUser } from "@/lib/auth";
 import {
   LayoutDashboard,
-  MessageSquare,
   ShieldAlert,
   LayoutGrid,
   Siren,
@@ -13,7 +12,6 @@ import {
   User,
   GraduationCap,
   Users,
-  ListChecks,
   PanelLeftClose,
   PanelLeftOpen,
   Sparkles,
