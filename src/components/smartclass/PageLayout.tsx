@@ -10,14 +10,14 @@ export function PageLayout({
   children: ReactNode;
 }) {
   return (
-    <div className="mx-auto w-full max-w-6xl space-y-6 p-6 md:p-8">
-      <header className="border-b border-border pb-5">
-        <h1 className="text-[26px] font-semibold tracking-tight text-foreground">{title}</h1>
+    <div className="mx-auto w-full max-w-7xl px-6 pb-10 md:px-10">
+      <header className="sticky top-16 z-10 -mx-6 mb-6 border-b border-border/70 bg-background/80 px-6 py-5 backdrop-blur-xl md:-mx-10 md:px-10">
+        <h1 className="text-[28px] font-bold tracking-tight text-foreground md:text-3xl">{title}</h1>
         {description && (
-          <p className="mt-1.5 text-sm text-muted-foreground">{description}</p>
+          <p className="mt-1.5 max-w-2xl text-sm text-muted-foreground">{description}</p>
         )}
       </header>
-      <div className="space-y-6">{children}</div>
+      <div className="space-y-8">{children}</div>
     </div>
   );
 }
