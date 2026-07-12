@@ -45,6 +45,9 @@ const DEFAULT_DATA = {
   sos: [
     { id: "sos1", message: "Injured student in Room 204, need help immediately.", status: "Resolved", createdAt: "2026-07-10T14:30:00Z" },
   ],
+  syllabi: [
+    { id: "sy1", subject: "Physics", title: "Chapter 5 — Motion", body: "Kinematics, equations of motion, projectile examples, past-year problem set.", createdAt: "2026-07-08T09:00:00Z" },
+  ],
   seatMap: {
     // seatNumber(1-24) -> studentId
     1: "s1", 2: "s2", 3: "s3", 5: "s4", 7: "s5", 12: "s6",
