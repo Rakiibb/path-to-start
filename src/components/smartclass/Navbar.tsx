@@ -1,31 +1,55 @@
 import { Search, LogOut } from "lucide-react";
-import { useNavigate } from "@tanstack/react-router";
+import { useNavigate, useRouterState } from "@tanstack/react-router";
 import { signOut, type Session } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { NotificationBell } from "./notifications/NotificationBell";
 
+const PAGE_TITLES: Record<string, string> = {
+  "/": "Dashboard",
+  "/class-feedback": "Class Feedback",
+  "/feedback": "Feedback",
+  "/captain-feedback": "Captain Feedback",
+  "/seat-planner": "Seat Planner",
+  "/reports": "Reports",
+  "/sos": "SOS",
+  "/school-rules": "School Rules",
+  "/notifications": "Notifications",
+  "/profile": "Profile",
+  "/student-management": "Student Management",
+  "/settings": "Settings",
+  "/activity-logs": "Activity Logs",
+};
+
 export function Navbar({ session }: { session: Session | null }) {
   const navigate = useNavigate();
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const title = PAGE_TITLES[pathname] ?? "SmartClass";
 
   return (
-    <header className="flex h-16 items-center gap-4 border-b border-gray-200 bg-white px-6">
-      <div className="relative flex-1 max-w-md">
-        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+    <header className="flex h-16 items-center gap-4 border-b border-border bg-card px-6">
+      <div className="hidden md:block min-w-0">
+        <div className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+          SmartClass
+        </div>
+        <div className="truncate text-sm font-semibold text-foreground">{title}</div>
+      </div>
+      <div className="relative ml-4 hidden lg:block w-72">
+        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         <input
           type="search"
           placeholder="Search..."
-          className="h-10 w-full rounded-lg border border-gray-200 bg-white pl-9 pr-3 text-sm text-gray-900 placeholder:text-gray-400 focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-100"
+          className="h-9 w-full rounded-lg border border-border bg-background pl-9 pr-3 text-sm placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/15"
         />
       </div>
       <div className="ml-auto flex items-center gap-3">
         <NotificationBell />
-        <div className="flex items-center gap-3 rounded-lg border border-gray-200 px-3 py-1.5">
-          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-sky-100 text-sm font-medium text-sky-700">
+        <div className="flex items-center gap-3 rounded-xl border border-border px-3 py-1.5 shadow-soft">
+          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary">
             {session?.name?.[0] ?? "U"}
           </div>
           <div className="hidden sm:block">
-            <div className="text-sm font-medium text-gray-900">{session?.name ?? "Guest"}</div>
-            <div className="text-xs capitalize text-gray-500">{session?.role ?? "—"}</div>
+            <div className="text-sm font-medium text-foreground leading-tight">{session?.name ?? "Guest"}</div>
+            <div className="text-xs capitalize text-muted-foreground">{session?.role ?? "—"}</div>
           </div>
         </div>
         <Button
