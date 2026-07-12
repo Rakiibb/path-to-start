@@ -14,7 +14,6 @@ import {
   GraduationCap,
   Users,
   Settings as SettingsIcon,
-  Activity,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -32,7 +31,6 @@ const items = [
 
 const captainItems = [
   { to: "/student-management", label: "Student Management", icon: Users },
-  { to: "/activity-logs", label: "Activity Logs", icon: Activity },
   { to: "/settings", label: "Settings", icon: SettingsIcon },
 ] as const;
 
