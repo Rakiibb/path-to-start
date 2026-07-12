@@ -42,7 +42,11 @@ export function Sidebar() {
     staleTime: 60_000,
   });
   const isCaptain = session?.role === "captain";
-  const allItems = isCaptain ? [...items, ...captainItems] : items;
+  // Captains don't submit feedback themselves — hide the create page from them.
+  const baseItems = isCaptain
+    ? items.filter((i) => i.to !== "/class-feedback")
+    : items;
+  const allItems = isCaptain ? [...baseItems, ...captainItems] : baseItems;
 
   return (
     <aside className="hidden md:flex md:w-64 shrink-0 flex-col border-r border-gray-200 bg-white">
