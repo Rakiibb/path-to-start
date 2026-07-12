@@ -58,7 +58,7 @@ export const loginWithSecretCode = createServerFn({ method: "POST" })
     z.object({
       rollNumber: z.string().trim().min(1),
       password: z.string().min(1),
-      secretCode: z.string().min(1),
+      secretCode: z.string().optional(),
     }).parse(input),
   )
   .handler(async ({ data }) => {
@@ -67,7 +67,7 @@ export const loginWithSecretCode = createServerFn({ method: "POST" })
 
     const roll = data.rollNumber.trim();
     const pw = data.password;
-    const secret = data.secretCode.trim();
+    const secret = (data.secretCode ?? "").trim();
 
     const { data: user, error: userErr } = await supabaseAdmin
       .from("users")
@@ -85,6 +85,7 @@ export const loginWithSecretCode = createServerFn({ method: "POST" })
     // Secret code path.
     if (user.secret_code === null) {
       // First-time setup — validate & claim.
+      if (!secret) throw new Error("Please enter a Secret Code to set up your account.");
       if (!SECRET_CODE_RE.test(secret)) {
         throw new Error(
           "Secret Code must be 4–20 characters (letters, numbers, underscore, dot).",
@@ -101,9 +102,8 @@ export const loginWithSecretCode = createServerFn({ method: "POST" })
         .update({ secret_code: secret })
         .eq("id", user.id);
       if (upErr) throw new Error(upErr.message);
-    } else if (user.secret_code !== secret) {
-      throw new Error("Incorrect Secret Code.");
     }
+    // If already set, Secret Code is not required on subsequent logins.
 
     // Session hydration.
     const email = syntheticEmail(user.id);
