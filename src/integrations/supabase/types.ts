@@ -101,8 +101,10 @@ export type Database = {
           created_at: string
           created_by: string
           description: string | null
+          feedback_type: string
           id: string
           status: Database["public"]["Enums"]["feedback_status"]
+          target_captain_id: string | null
           title: string
           updated_at: string
         }
@@ -112,8 +114,10 @@ export type Database = {
           created_at?: string
           created_by: string
           description?: string | null
+          feedback_type?: string
           id?: string
           status?: Database["public"]["Enums"]["feedback_status"]
+          target_captain_id?: string | null
           title: string
           updated_at?: string
         }
@@ -123,8 +127,10 @@ export type Database = {
           created_at?: string
           created_by?: string
           description?: string | null
+          feedback_type?: string
           id?: string
           status?: Database["public"]["Enums"]["feedback_status"]
+          target_captain_id?: string | null
           title?: string
           updated_at?: string
         }
@@ -132,6 +138,13 @@ export type Database = {
           {
             foreignKeyName: "feedback_created_by_fkey"
             columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "feedback_target_captain_id_fkey"
+            columns: ["target_captain_id"]
             isOneToOne: false
             referencedRelation: "users"
             referencedColumns: ["id"]
