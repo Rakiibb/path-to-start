@@ -1,4 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -6,6 +7,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { PageLayout } from "@/components/smartclass/PageLayout";
 import { createFeedback, getMyLastFeedback } from "@/services/feedback.service";
+import { getCurrentAppUser } from "@/lib/auth";
 
 const CATEGORIES = [
   "Academic",
@@ -53,6 +55,15 @@ function timeAgo(iso: string): string {
 function ClassFeedbackPage() {
   const navigate = useNavigate();
   const qc = useQueryClient();
+  const { data: me } = useQuery({
+    queryKey: ["me"],
+    queryFn: getCurrentAppUser,
+    staleTime: 60_000,
+  });
+  useEffect(() => {
+    if (me && me.role === "captain") navigate({ to: "/feedback", replace: true });
+  }, [me, navigate]);
+  if (me?.role === "captain") return null;
   const { data: lastFeedback, isLoading: loadingLast } = useQuery({
     queryKey: ["my-last-feedback"],
     queryFn: getMyLastFeedback,
