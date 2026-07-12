@@ -1,7 +1,8 @@
-import { Bell, Search, LogOut } from "lucide-react";
+import { Search, LogOut } from "lucide-react";
 import { useNavigate } from "@tanstack/react-router";
 import { signOut, type Session } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
+import { NotificationBell } from "./notifications/NotificationBell";
 
 export function Navbar({ session }: { session: Session | null }) {
   const navigate = useNavigate();
@@ -17,13 +18,7 @@ export function Navbar({ session }: { session: Session | null }) {
         />
       </div>
       <div className="ml-auto flex items-center gap-3">
-        <button
-          className="relative flex h-10 w-10 items-center justify-center rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50"
-          aria-label="Notifications"
-        >
-          <Bell className="h-4 w-4" />
-          <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-sky-500" />
-        </button>
+        <NotificationBell />
         <div className="flex items-center gap-3 rounded-lg border border-gray-200 px-3 py-1.5">
           <div className="flex h-8 w-8 items-center justify-center rounded-full bg-sky-100 text-sm font-medium text-sky-700">
             {session?.name?.[0] ?? "U"}

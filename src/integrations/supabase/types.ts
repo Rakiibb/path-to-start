@@ -99,6 +99,7 @@ export type Database = {
       }
       notifications: {
         Row: {
+          category: string
           created_at: string
           id: string
           is_read: boolean
@@ -107,6 +108,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          category?: string
           created_at?: string
           id?: string
           is_read?: boolean
@@ -115,6 +117,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          category?: string
           created_at?: string
           id?: string
           is_read?: boolean
