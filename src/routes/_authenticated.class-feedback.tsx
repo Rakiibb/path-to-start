@@ -61,7 +61,7 @@ function ClassFeedbackPage() {
     staleTime: 60_000,
   });
   useEffect(() => {
-    if (me && me.role === "captain") navigate({ to: "/feedback", replace: true });
+    if (me && me.role === "captain") navigate({ to: "/captain-feedback", replace: true });
   }, [me, navigate]);
   const { data: lastFeedback, isLoading: loadingLast } = useQuery({
     queryKey: ["my-last-feedback"],
@@ -99,7 +99,7 @@ function ClassFeedbackPage() {
       reset();
       await qc.invalidateQueries({ queryKey: ["my-last-feedback"] });
       await qc.invalidateQueries({ queryKey: ["dashboard"] });
-      navigate({ to: "/feedback" });
+      await qc.invalidateQueries({ queryKey: ["my-last-feedback"] });
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Failed to submit feedback";
       toast.error(msg);

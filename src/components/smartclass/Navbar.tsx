@@ -7,7 +7,6 @@ import { NotificationBell } from "./notifications/NotificationBell";
 const PAGE_TITLES: Record<string, string> = {
   "/": "Dashboard",
   "/class-feedback": "Class Feedback",
-  "/feedback": "Feedback",
   "/captain-feedback": "Captain Feedback",
   "/seat-planner": "Seat Planner",
   "/reports": "Reports",

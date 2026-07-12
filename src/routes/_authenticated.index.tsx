@@ -52,8 +52,8 @@ function timeAgo(iso: string): string {
 }
 
 const QUICK_ACTIONS = [
-  { to: "/feedback", label: "Create Feedback", icon: Plus },
-  { to: "/class-feedback", label: "View Feedback", icon: ListChecks },
+  { to: "/class-feedback", label: "Class Feedback", icon: Plus },
+  { to: "/captain-feedback", label: "Captain Feedback", icon: ListChecks },
   { to: "/seat-planner", label: "Seat Planner", icon: Armchair },
   { to: "/sos", label: "SOS", icon: Siren },
   { to: "/school-rules", label: "School Rules", icon: BookOpen },
