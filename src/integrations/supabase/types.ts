@@ -14,16 +14,266 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      feedback: {
+        Row: {
+          amount: number | null
+          category: string | null
+          created_at: string
+          created_by: string
+          description: string | null
+          id: string
+          status: Database["public"]["Enums"]["feedback_status"]
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          amount?: number | null
+          category?: string | null
+          created_at?: string
+          created_by: string
+          description?: string | null
+          id?: string
+          status?: Database["public"]["Enums"]["feedback_status"]
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number | null
+          category?: string | null
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          id?: string
+          status?: Database["public"]["Enums"]["feedback_status"]
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "feedback_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      feedback_votes: {
+        Row: {
+          created_at: string
+          feedback_id: string
+          id: string
+          user_id: string
+          vote: boolean
+        }
+        Insert: {
+          created_at?: string
+          feedback_id: string
+          id?: string
+          user_id: string
+          vote: boolean
+        }
+        Update: {
+          created_at?: string
+          feedback_id?: string
+          id?: string
+          user_id?: string
+          vote?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "feedback_votes_feedback_id_fkey"
+            columns: ["feedback_id"]
+            isOneToOne: false
+            referencedRelation: "feedback"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "feedback_votes_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notifications: {
+        Row: {
+          created_at: string
+          id: string
+          is_read: boolean
+          message: string | null
+          title: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          message?: string | null
+          title: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          message?: string | null
+          title?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      school_rules: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          keywords: string[] | null
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          keywords?: string[] | null
+          title: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          keywords?: string[] | null
+          title?: string
+        }
+        Relationships: []
+      }
+      seat_students: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          height_cm: number | null
+          id: string
+          name: string
+          roll_number: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          height_cm?: number | null
+          id?: string
+          name: string
+          roll_number?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          height_cm?: number | null
+          id?: string
+          name?: string
+          roll_number?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "seat_students_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sos_requests: {
+        Row: {
+          created_at: string
+          id: string
+          location: string | null
+          message: string | null
+          status: Database["public"]["Enums"]["sos_status"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          location?: string | null
+          message?: string | null
+          status?: Database["public"]["Enums"]["sos_status"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          location?: string | null
+          message?: string | null
+          status?: Database["public"]["Enums"]["sos_status"]
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sos_requests_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      users: {
+        Row: {
+          auth_user_id: string | null
+          created_at: string
+          full_name: string
+          height_cm: number | null
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          roll_number: string | null
+          secret_code: string
+        }
+        Insert: {
+          auth_user_id?: string | null
+          created_at?: string
+          full_name: string
+          height_cm?: number | null
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          roll_number?: string | null
+          secret_code: string
+        }
+        Update: {
+          auth_user_id?: string | null
+          created_at?: string
+          full_name?: string
+          height_cm?: number | null
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          roll_number?: string | null
+          secret_code?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      current_app_user_id: { Args: never; Returns: string }
+      has_role: {
+        Args: { _role: Database["public"]["Enums"]["app_role"] }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "student" | "captain"
+      feedback_status: "Pending" | "Verified" | "Rejected"
+      sos_status: "Active" | "Resolved"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +400,10 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["student", "captain"],
+      feedback_status: ["Pending", "Verified", "Rejected"],
+      sos_status: ["Active", "Resolved"],
+    },
   },
 } as const
