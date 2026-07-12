@@ -1,33 +1,44 @@
+import { supabase } from "@/integrations/supabase/client";
+import { loginWithSecretCode } from "./auth.functions";
+
 export type Role = "student" | "captain";
 
-const KEY = "smartclass_session";
+export type Session = {
+  id: string;
+  role: Role;
+  name: string;
+};
 
-export type Session = { role: Role; code: string; name: string };
-
-export function getSession(): Session | null {
-  if (typeof window === "undefined") return null;
-  try {
-    const raw = window.localStorage.getItem(KEY);
-    return raw ? (JSON.parse(raw) as Session) : null;
-  } catch {
-    return null;
-  }
-}
-
-export function signIn(code: string): Session | null {
-  const trimmed = code.trim();
-  if (!trimmed) return null;
-  const isCaptain = trimmed.toUpperCase().startsWith("C");
-  const session: Session = {
-    role: isCaptain ? "captain" : "student",
-    code: trimmed,
-    name: isCaptain ? "Class Captain" : "Student",
+// Sign in with a secret code. Delegates to the server, then hydrates the
+// Supabase session on the client so RLS-protected queries work.
+export async function signInWithCode(secretCode: string): Promise<Session> {
+  const result = await loginWithSecretCode({ data: { secretCode } });
+  const { error } = await supabase.auth.setSession({
+    access_token: result.access_token,
+    refresh_token: result.refresh_token,
+  });
+  if (error) throw error;
+  return {
+    id: result.user.id,
+    role: result.user.role as Role,
+    name: result.user.full_name,
   };
-  window.localStorage.setItem(KEY, JSON.stringify(session));
-  return session;
 }
 
-export function signOut() {
-  if (typeof window === "undefined") return;
-  window.localStorage.removeItem(KEY);
+export async function signOut() {
+  await supabase.auth.signOut();
+}
+
+// Fetch the current app user's profile (users row). Returns null when signed
+// out. RLS restricts this to the user's own row.
+export async function getCurrentAppUser(): Promise<Session | null> {
+  const { data: auth } = await supabase.auth.getUser();
+  if (!auth.user) return null;
+  const { data, error } = await supabase
+    .from("users")
+    .select("id, full_name, role")
+    .eq("auth_user_id", auth.user.id)
+    .maybeSingle();
+  if (error || !data) return null;
+  return { id: data.id, name: data.full_name, role: data.role as Role };
 }
