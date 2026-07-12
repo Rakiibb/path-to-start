@@ -45,16 +45,19 @@ export function Navbar({ session }: { session: Session | null }) {
         </kbd>
       </div>
       <div className="ml-auto flex items-center gap-3">
-        <Button
-          variant="destructive"
-          size="sm"
-          className="gap-1.5 bg-red-600 hover:bg-red-700"
+        <button
+          type="button"
           onClick={() => navigate({ to: "/sos" })}
-          aria-label="SOS"
+          aria-label="SOS Emergency"
+          title="SOS Emergency"
+          className="relative flex h-11 w-11 items-center justify-center rounded-full bg-red-600 text-white text-[11px] font-bold tracking-wide shadow-lg shadow-red-600/40 ring-2 ring-red-300 hover:bg-red-700 focus:outline-none focus:ring-4 focus:ring-red-300 animate-pulse"
         >
-          <Siren className="h-4 w-4" />
-          SOS
-        </Button>
+          <span className="absolute inset-0 rounded-full bg-red-500/40 animate-ping" aria-hidden />
+          <span className="relative flex flex-col items-center leading-none">
+            <Siren className="h-4 w-4" />
+            <span className="mt-0.5">SOS</span>
+          </span>
+        </button>
         <NotificationBell />
         <div className="flex items-center gap-3 rounded-xl border border-border px-3 py-1.5 shadow-soft">
           <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary">
