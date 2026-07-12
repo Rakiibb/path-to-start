@@ -39,3 +39,17 @@ export async function deleteFeedback(id: string): Promise<void> {
   const { error } = await supabase.from("feedback").delete().eq("id", id);
   if (error) throw error;
 }
+
+export async function getMyLastFeedback(): Promise<Feedback | null> {
+  const me = await getMe();
+  if (!me) return null;
+  const { data, error } = await supabase
+    .from("feedback")
+    .select("*")
+    .eq("created_by", me.id)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (error) throw error;
+  return data;
+}
