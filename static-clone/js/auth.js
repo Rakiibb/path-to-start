@@ -19,9 +19,9 @@ var _students = [
 window.SC_ACCOUNTS = {};
 
 // Captain (single fixed account) — real name + title are public.
-window.SC_ACCOUNTS["captain01"] = {
-  code: "captain01", password: "1234", role: "captain",
-  name: "Mr. Karim", roll: "C-01", title: "Class Captain",
+window.SC_ACCOUNTS["teacher01"] = {
+  code: "teacher01", password: "1234", role: "captain",
+  name: "Mr. Karim", roll: "T-01", title: "Teacher",
 };
 
 // Students — auto-generated code becomes their login ID.
