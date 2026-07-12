@@ -45,7 +45,33 @@
     <div class="content">
       <div class="page-header">
         <h1>✨ AI Syllabus Summarizer</h1>
-        <p>Paste your long syllabus text and get a quick summary (offline mock).</p>
+        <p>Captains can publish syllabi. Students can read them and use the summarizer.</p>
+      </div>
+
+      <div class="card mb-4" id="add-syllabus-card" style="display:none;">
+        <h3 class="mb-4">➕ Publish Syllabus <span class="badge gray">Captain only</span></h3>
+        <form id="syllabus-form">
+          <div class="grid cols-2">
+            <div class="field">
+              <label>Subject *</label>
+              <input class="input" name="subject" required maxlength="60" placeholder="e.g. Physics" />
+            </div>
+            <div class="field">
+              <label>Title *</label>
+              <input class="input" name="title" required maxlength="120" placeholder="e.g. Chapter 5 — Motion" />
+            </div>
+          </div>
+          <div class="field">
+            <label>Content *</label>
+            <textarea class="textarea" name="body" required minlength="20" placeholder="Full syllabus content"></textarea>
+          </div>
+          <button class="btn" type="submit">Publish Syllabus</button>
+        </form>
+      </div>
+
+      <div class="card mb-4">
+        <h3 class="mb-4">📚 Published Syllabi</h3>
+        <div id="syllabus-list"></div>
       </div>
 
       <div class="grid cols-2">
@@ -72,6 +98,43 @@
 <script src="js/data.js"></script>
 <script src="js/app.js"></script>
 <script>
+function renderSyllabi() {
+  var box = document.getElementById("syllabus-list");
+  if (!DB.syllabi || DB.syllabi.length === 0) {
+    box.innerHTML = '<p class="text-muted text-sm">No syllabus published yet.</p>';
+    return;
+  }
+  box.innerHTML = DB.syllabi
+    .slice().sort(function(a,b){ return new Date(b.createdAt) - new Date(a.createdAt); })
+    .map(function (s) {
+      return '<div class="fb-item">' +
+        '<div class="row between"><h4>' + s.title + '</h4>' +
+        '<span class="badge gray">' + s.subject + '</span></div>' +
+        '<div class="meta"><span>🕒 ' + fmtDateTime(s.createdAt) + '</span></div>' +
+        '<p>' + s.body + '</p></div>';
+    }).join("");
+}
+renderSyllabi();
+
+var me = scGetUser();
+if (me && me.role === "captain") {
+  document.getElementById("add-syllabus-card").style.display = "";
+  document.getElementById("syllabus-form").addEventListener("submit", function (e) {
+    e.preventDefault();
+    var fd = new FormData(e.target);
+    var subject = (fd.get("subject") || "").trim();
+    var title = (fd.get("title") || "").trim();
+    var body = (fd.get("body") || "").trim();
+    if (!subject || !title || body.length < 20) { toast("Fill all fields (content min 20 chars)."); return; }
+    DB.syllabi = DB.syllabi || [];
+    DB.syllabi.unshift({ id: uid("sy"), subject: subject, title: title, body: body, createdAt: new Date().toISOString() });
+    saveData(DB);
+    e.target.reset();
+    renderSyllabi();
+    toast("Syllabus published.");
+  });
+}
+
 const input = document.getElementById("input");
 input.addEventListener("input", () => {
   document.getElementById("count").textContent = input.value.length + " characters";
