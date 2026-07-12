@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Captain Feedback — SmartClass</title>
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main">
+    <header class="navbar" id="navbar"></header>
+    <div class="content">
+      <div class="page-header">
+        <h1>Captain Feedback</h1>
+        <p>Click any captain card to see all feedback submitted about them.</p>
+      </div>
+
+      <div class="captain-grid mb-4" id="captain-grid"></div>
+
+      <div class="card">
+        <h3 class="mb-4">Submit Captain Feedback</h3>
+        <form id="fb-form">
+          <div class="grid cols-2">
+            <div class="field">
+              <label>Captain *</label>
+              <select class="select" name="captainId" required id="cap-select"></select>
+            </div>
+            <div class="field">
+              <label>Category</label>
+              <select class="select" name="category">
+                <option value="">—</option>
+                <option>Academic</option><option>Behavior</option><option>Leadership</option>
+                <option>Fund Issue</option><option>Communication</option><option>Other</option>
+              </select>
+            </div>
+          </div>
+          <div class="field">
+            <label>Title *</label>
+            <input class="input" name="title" required maxlength="120" placeholder="Short summary" />
+          </div>
+          <div class="field">
+            <label>Description *</label>
+            <textarea class="textarea" name="description" required minlength="20" placeholder="Explain clearly (min 20 characters)"></textarea>
+          </div>
+          <button type="submit" class="btn">Submit Feedback</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="dialog-backdrop" id="dlg">
+  <div class="dialog">
+    <div class="dialog-header">
+      <h2 id="dlg-title"></h2>
+      <button class="close-btn" onclick="closeDialog()">×</button>
+    </div>
+    <div id="dlg-body"></div>
+  </div>
+</div>
+
+<script src="js/data.js"></script>
+<script src="js/app.js"></script>
+<script>
+renderLayout("Captain Feedback");
+
+function render() {
+  const grid = document.getElementById("captain-grid");
+  grid.innerHTML = DB.captains.map(c => {
+    const items = DB.feedback.filter(f => f.captainId === c.id);
+    const verified = items.filter(f => f.status === "Verified").length;
+    const pending = items.filter(f => f.status === "Pending").length;
+    const tier = tierFor(verified);
+    return `
+      <button class="captain-card tier-${tier}" onclick="openDialog('${c.id}')">
+        <div class="top">
+          <div class="avatar-lg">${initials(c.name)}</div>
+          <div style="flex:1;">
+            <div class="name">${c.name}</div>
+            <span class="badge ${tier === 'red' ? 'red' : 'gray'}">${tierLabel(tier)}</span>
+          </div>
+        </div>
+        <div class="stats">
+          <div class="stat"><div class="n">${items.length}</div><div class="l">Total</div></div>
+          <div class="stat"><div class="n" style="color:${verified>=3?'var(--red)':'inherit'}">${verified}</div><div class="l">Verified</div></div>
+          <div class="stat"><div class="n" style="color:var(--amber)">${pending}</div><div class="l">Pending</div></div>
+        </div>
+      </button>
+    `;
+  }).join("");
+
+  const sel = document.getElementById("cap-select");
+  sel.innerHTML = '<option value="">Select a captain</option>' +
+    DB.captains.map(c => `<option value="${c.id}">${c.name}</option>`).join("");
+}
+
+function openDialog(captainId) {
+  const cap = DB.captains.find(c => c.id === captainId);
+  const items = DB.feedback.filter(f => f.captainId === captainId)
+    .sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
+  document.getElementById("dlg-title").textContent = `Feedback about ${cap.name}`;
+  const body = document.getElementById("dlg-body");
+  if (items.length === 0) {
+    body.innerHTML = '<p class="text-muted text-sm" style="padding:24px 0;text-align:center;">No feedback submitted about this captain yet.</p>';
+  } else {
+    body.innerHTML = `<p class="text-xs text-muted mb-4">Total ${items.length} feedback${items.length === 1 ? '' : 's'}</p>` +
+      items.map(f => `
+        <div class="fb-item">
+          <div class="row between">
+            <h4>${f.title}</h4>
+            <span class="badge ${f.status.toLowerCase()}">${f.status}</span>
+          </div>
+          <div class="meta">
+            ${f.category ? `<span class="badge gray">${f.category}</span>` : ''}
+            <span>🕒 ${fmtDateTime(f.createdAt)}</span>
+          </div>
+          <p>${f.description}</p>
+        </div>
+      `).join("");
+  }
+  document.getElementById("dlg").classList.add("open");
+}
+function closeDialog() { document.getElementById("dlg").classList.remove("open"); }
+document.getElementById("dlg").addEventListener("click", e => {
+  if (e.target.id === "dlg") closeDialog();
+});
+
+document.getElementById("fb-form").addEventListener("submit", e => {
+  e.preventDefault();
+  const fd = new FormData(e.target);
+  const captainId = fd.get("captainId");
+  const title = fd.get("title").trim();
+  const description = fd.get("description").trim();
+  const category = fd.get("category") || null;
+  if (!captainId || !title || description.length < 20) {
+    toast("Please fill all required fields correctly.");
+    return;
+  }
+  DB.feedback.unshift({
+    id: uid("f"), captainId, title, description, category,
+    status: "Pending", createdAt: new Date().toISOString(),
+  });
+  saveData(DB);
+  e.target.reset();
+  render();
+  toast("Feedback submitted successfully.");
+});
+
+render();
+</script>
+</body>
+</html>

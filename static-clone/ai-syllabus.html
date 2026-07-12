@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>AI Syllabus — SmartClass</title>
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main">
+    <header class="navbar" id="navbar"></header>
+    <div class="content">
+      <div class="page-header">
+        <h1>✨ AI Syllabus Summarizer</h1>
+        <p>Paste your long syllabus text and get a quick summary (offline mock).</p>
+      </div>
+
+      <div class="grid cols-2">
+        <div class="card">
+          <div class="field">
+            <label>Syllabus Text</label>
+            <textarea class="textarea" id="input" rows="14" placeholder="Paste the syllabus content here (min 100 chars)..."></textarea>
+            <div class="text-xs text-muted mt-4" id="count">0 characters</div>
+          </div>
+          <div class="row">
+            <button class="btn" onclick="summarize()">Summarize</button>
+            <button class="btn outline" onclick="clearAll()">Clear</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3 class="mb-4">Summary</h3>
+          <div id="output"><p class="text-muted text-sm">No summary yet. Paste text and click Summarize.</p></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="js/data.js"></script>
+<script src="js/app.js"></script>
+<script>
+renderLayout("AI Syllabus");
+const input = document.getElementById("input");
+input.addEventListener("input", () => {
+  document.getElementById("count").textContent = input.value.length + " characters";
+});
+
+function summarize() {
+  const text = input.value.trim();
+  if (text.length < 100) { toast("Please paste at least 100 characters."); return; }
+
+  // Simple offline heuristic: pick first, middle, last sentences + keyword extraction.
+  const sentences = text.match(/[^.!?\n]+[.!?]+/g) || [text];
+  const summary = sentences.slice(0, Math.min(5, sentences.length)).map(s => s.trim());
+
+  // Naive keyword extraction: top frequent words (>5 chars, not stopwords)
+  const stop = new Set(["about","which","their","there","would","could","should","these","those","other","where","being","after","before"]);
+  const freq = {};
+  text.toLowerCase().replace(/[^a-z\s]/g, " ").split(/\s+/).forEach(w => {
+    if (w.length > 5 && !stop.has(w)) freq[w] = (freq[w] || 0) + 1;
+  });
+  const topics = Object.entries(freq).sort((a,b) => b[1]-a[1]).slice(0, 8).map(x => x[0]);
+
+  const readTime = Math.max(1, Math.round(text.split(/\s+/).length / 200));
+
+  document.getElementById("output").innerHTML = `
+    <div class="mb-4">
+      <h4 class="mb-2">📋 Summary</h4>
+      <ul style="padding-left:18px;font-size:13px;line-height:1.6;">
+        ${summary.map(s => `<li>${s}</li>`).join("")}
+      </ul>
+    </div>
+    <div class="mb-4">
+      <h4 class="mb-2">⭐ Important Topics</h4>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;">
+        ${topics.map(t => `<span class="badge gray">${t}</span>`).join("")}
+      </div>
+    </div>
+    <div>
+      <h4 class="mb-2">⏱ Estimated Study Time</h4>
+      <p class="text-sm">${readTime * 3}–${readTime * 5} hours</p>
+    </div>
+  `;
+}
+function clearAll() {
+  input.value = "";
+  document.getElementById("count").textContent = "0 characters";
+  document.getElementById("output").innerHTML = '<p class="text-muted text-sm">No summary yet.</p>';
+}
+</script>
+</body>
+</html>
