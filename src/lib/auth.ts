@@ -11,8 +11,11 @@ export type Session = {
 
 // Sign in with a secret code. Delegates to the server, then hydrates the
 // Supabase session on the client so RLS-protected queries work.
-export async function signInWithCode(secretCode: string): Promise<Session> {
-  const result = await loginWithSecretCode({ data: { secretCode } });
+export async function signInWithCode(
+  rollNumber: string,
+  secretCode: string,
+): Promise<Session> {
+  const result = await loginWithSecretCode({ data: { rollNumber, secretCode } });
   const { error } = await supabase.auth.setSession({
     access_token: result.access_token,
     refresh_token: result.refresh_token,
