@@ -34,11 +34,15 @@ function AuthenticatedLayout() {
   }
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
-      <Sidebar />
+    <div className="flex min-h-screen bg-background">
+      <div className="sticky top-0 z-30 h-screen">
+        <Sidebar />
+      </div>
       <div className="flex min-w-0 flex-1 flex-col">
-        <Navbar session={session} />
-        <main className="flex-1 overflow-auto">
+        <div className="sticky top-0 z-20">
+          <Navbar session={session} />
+        </div>
+        <main className="flex-1">
           <Outlet />
         </main>
       </div>

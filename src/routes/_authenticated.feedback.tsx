@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Search, FileDown } from "lucide-react";
+import { Search, FileDown, Inbox, SlidersHorizontal } from "lucide-react";
 import { PageLayout } from "@/components/smartclass/PageLayout";
 import { FeedbackCard } from "@/components/smartclass/feedback/FeedbackCard";
 import { EditFeedbackDialog } from "@/components/smartclass/feedback/EditFeedbackDialog";
@@ -138,31 +138,34 @@ function FeedbackPage() {
   }
 
   const input =
-    "h-10 rounded-lg border border-gray-300 bg-white px-3 text-sm text-gray-900 placeholder-gray-400 focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500";
+    "h-10 rounded-xl border border-border bg-card px-3 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/15";
 
   return (
     <PageLayout title="Feedback" description="Browse all classroom feedback submitted by students.">
-      <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+      <div className="rounded-2xl border border-border bg-card p-4 shadow-soft">
         <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div className="relative flex-1">
-            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+            <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
             <input
               type="search"
-              placeholder="Search feedback…"
+              placeholder="Search feedback by title, description, or category…"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className={`${input} w-full pl-9`}
+              className={`${input} w-full pl-10`}
             />
           </div>
           <div className="flex flex-wrap items-center gap-2">
+            <div className="hidden items-center gap-1.5 rounded-lg border border-border bg-muted/40 px-2.5 py-1 text-xs font-medium text-muted-foreground md:inline-flex">
+              <SlidersHorizontal className="h-3.5 w-3.5" /> Filters
+            </div>
             <select className={input} value={category} onChange={(e) => setCategory(e.target.value as typeof category)}>
               {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
             </select>
             <select className={input} value={status} onChange={(e) => setStatus(e.target.value as typeof status)}>
               {STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
             </select>
-            <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700">
-              <input type="checkbox" checked={mineOnly} onChange={(e) => setMineOnly(e.target.checked)} className="h-4 w-4 accent-sky-600" />
+            <label className="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-border bg-card px-3 py-2 text-sm font-medium text-foreground hover:bg-accent/50">
+              <input type="checkbox" checked={mineOnly} onChange={(e) => setMineOnly(e.target.checked)} className="h-4 w-4 accent-primary" />
               My Feedback
             </label>
             <button
@@ -182,7 +185,7 @@ function FeedbackPage() {
                   ]),
                 )
               }
-              className="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+              className="btn-press inline-flex items-center gap-2 rounded-xl border border-border bg-card px-3.5 py-2 text-sm font-semibold text-foreground hover:bg-accent/50 disabled:cursor-not-allowed disabled:opacity-50"
             >
               <FileDown size={16} /> Export CSV
             </button>
@@ -191,18 +194,24 @@ function FeedbackPage() {
       </div>
 
       {isLoading ? (
-        <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2">
+        <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
           {[0, 1, 2, 3].map((i) => (
-            <div key={i} className="h-56 animate-pulse rounded-xl bg-gray-100" />
+            <div key={i} className="h-64 animate-pulse rounded-2xl border border-border bg-muted/50" />
           ))}
         </div>
       ) : pageItems.length === 0 ? (
-        <div className="mt-6 rounded-xl border border-dashed border-gray-200 bg-gray-50 p-10 text-center text-sm text-gray-500">
-          No feedback found.
+        <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border bg-card px-6 py-16 text-center">
+          <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-muted text-muted-foreground">
+            <Inbox className="h-6 w-6" />
+          </div>
+          <h3 className="text-base font-semibold text-foreground">No feedback found</h3>
+          <p className="mt-1.5 max-w-sm text-sm text-muted-foreground">
+            Try adjusting your filters, changing your search terms, or clearing the "My Feedback" toggle.
+          </p>
         </div>
       ) : (
         <>
-          <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2">
+          <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
             {pageItems.map((f) => (
               <FeedbackCard
                 key={f.id}
@@ -218,8 +227,8 @@ function FeedbackPage() {
           </div>
 
           {totalPages > 1 && (
-            <div className="mt-6 flex items-center justify-between text-sm">
-              <p className="text-gray-500">
+            <div className="flex items-center justify-between text-sm">
+              <p className="text-muted-foreground">
                 Page {currentPage} of {totalPages} · {filtered.length} results
               </p>
               <div className="flex gap-2">
@@ -227,7 +236,7 @@ function FeedbackPage() {
                   type="button"
                   onClick={() => setPage((p) => Math.max(1, p - 1))}
                   disabled={currentPage === 1}
-                  className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 font-medium text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="btn-press rounded-xl border border-border bg-card px-4 py-2 font-medium text-foreground hover:bg-accent/50 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   Previous
                 </button>
@@ -235,7 +244,7 @@ function FeedbackPage() {
                   type="button"
                   onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                   disabled={currentPage === totalPages}
-                  className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 font-medium text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="btn-press rounded-xl border border-border bg-card px-4 py-2 font-medium text-foreground hover:bg-accent/50 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   Next
                 </button>

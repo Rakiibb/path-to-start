@@ -63,7 +63,9 @@
 
 :root {
   /* SmartClass — Modern SaaS palette (#F8FAFC bg, #2563EB primary) */
-  --radius: 0.875rem; /* 14px base — soft rounded corners */
+  --radius: 1rem; /* 16px base — modern SaaS corners */
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-display: "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
   --background: oklch(0.984 0.006 247);      /* #F8FAFC */
   --foreground: oklch(0.21 0.03 264);        /* slate-900 */
   --card: oklch(1 0 0);                      /* pure white */
@@ -98,8 +100,10 @@
   --sidebar-accent-foreground: oklch(0.55 0.2 262);
   --sidebar-border: oklch(0.925 0.012 255);
   --sidebar-ring: oklch(0.55 0.2 262);
-  --shadow-soft: 0 1px 2px 0 rgb(15 23 42 / 0.04), 0 1px 3px 0 rgb(15 23 42 / 0.06);
-  --shadow-lift: 0 4px 16px -4px rgb(15 23 42 / 0.08), 0 2px 6px -2px rgb(15 23 42 / 0.05);
+  --shadow-soft: 0 1px 2px 0 rgb(15 23 42 / 0.03), 0 1px 2px 0 rgb(15 23 42 / 0.04);
+  --shadow-lift: 0 8px 24px -8px rgb(15 23 42 / 0.10), 0 2px 6px -2px rgb(15 23 42 / 0.05);
+  --shadow-pop:  0 20px 40px -16px rgb(15 23 42 / 0.16), 0 4px 10px -4px rgb(15 23 42 / 0.06);
+  --shadow-glow-red: 0 0 0 1px rgb(239 68 68 / 0.35), 0 12px 32px -12px rgb(239 68 68 / 0.35);
 }
 
 .dark {
@@ -145,8 +149,16 @@
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
-    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    font-family: var(--font-sans);
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11", "ss01";
     -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  h1, h2, h3, h4 {
+    font-family: var(--font-display);
+    letter-spacing: -0.02em;
   }
 
   button, a, [role="button"] {
@@ -160,6 +172,24 @@
 }
 @utility shadow-lift {
   box-shadow: var(--shadow-lift);
+}
+@utility shadow-pop {
+  box-shadow: var(--shadow-pop);
+}
+@utility card-hover {
+  transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease;
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lift);
+    border-color: color-mix(in oklab, var(--primary) 25%, var(--border));
+  }
+}
+@utility btn-press {
+  transition: transform .15s ease, box-shadow .2s ease, background-color .2s ease;
+  &:active { transform: translateY(1px); }
+}
+@utility glow-red {
+  box-shadow: var(--shadow-glow-red);
 }
 
 @keyframes red-alert-pulse {
