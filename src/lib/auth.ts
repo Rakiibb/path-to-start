@@ -14,10 +14,10 @@ export type Session = {
 export async function signInWithCode(
   rollNumber: string,
   password: string,
-  secretCode: string,
+  secretCode?: string,
 ): Promise<Session & { firstLogin: boolean }> {
   const result = await loginWithSecretCode({
-    data: { rollNumber, password, secretCode },
+    data: { rollNumber, password, secretCode: secretCode ?? "" },
   });
   const { error } = await supabase.auth.setSession({
     access_token: result.access_token,
