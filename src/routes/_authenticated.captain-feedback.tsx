@@ -189,6 +189,20 @@ function CaptainFeedbackPage() {
   const capsQ = useQuery({ queryKey: ["captains"], queryFn: loadCaptains });
   const fbQ = useQuery({ queryKey: ["captain-feedback"], queryFn: loadCaptainFeedback });
 
+  const allFbQ = useQuery({
+    queryKey: ["captain-feedback-all"],
+    queryFn: async (): Promise<(CapFeedbackDetail & { captain: Captain | null })[]> => {
+      const { data, error } = await supabase
+        .from("feedback")
+        .select("id, target_captain_id, status, created_at, title, description, category, captain:users!feedback_target_captain_id_fkey(id, full_name)")
+        .eq("feedback_type", "Captain")
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return (data ?? []).map((r: any) => ({ ...r, captain: r.captain ?? null }));
+    },
+  });
+  const [allSearch, setAllSearch] = useState("");
+
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<"All" | Tier>("All");
   const [selectedCaptain, setSelectedCaptain] = useState<Captain | null>(null);
@@ -213,6 +227,7 @@ function CaptainFeedbackPage() {
       .channel("captain-feedback")
       .on("postgres_changes", { event: "*", schema: "public", table: "feedback" }, () => {
         qc.invalidateQueries({ queryKey: ["captain-feedback"] });
+        qc.invalidateQueries({ queryKey: ["captain-feedback-all"] });
       })
       .subscribe();
     return () => { supabase.removeChannel(ch); };
