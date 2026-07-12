@@ -18,7 +18,6 @@ import { Route as AuthenticatedSosRouteImport } from './routes/_authenticated.so
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated.settings'
 import { Route as AuthenticatedSeatPlannerRouteImport } from './routes/_authenticated.seat-planner'
 import { Route as AuthenticatedSchoolRulesRouteImport } from './routes/_authenticated.school-rules'
-import { Route as AuthenticatedReportsRouteImport } from './routes/_authenticated.reports'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated.profile'
 import { Route as AuthenticatedNotificationsRouteImport } from './routes/_authenticated.notifications'
 import { Route as AuthenticatedClassFeedbackRouteImport } from './routes/_authenticated.class-feedback'
@@ -73,11 +72,6 @@ const AuthenticatedSchoolRulesRoute =
     path: '/school-rules',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
-const AuthenticatedReportsRoute = AuthenticatedReportsRouteImport.update({
-  id: '/reports',
-  path: '/reports',
-  getParentRoute: () => AuthenticatedRoute,
-} as any)
 const AuthenticatedProfileRoute = AuthenticatedProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
@@ -124,7 +118,6 @@ export interface FileRoutesByFullPath {
   '/class-feedback': typeof AuthenticatedClassFeedbackRoute
   '/notifications': typeof AuthenticatedNotificationsRoute
   '/profile': typeof AuthenticatedProfileRoute
-  '/reports': typeof AuthenticatedReportsRoute
   '/school-rules': typeof AuthenticatedSchoolRulesRoute
   '/seat-planner': typeof AuthenticatedSeatPlannerRoute
   '/settings': typeof AuthenticatedSettingsRoute
@@ -140,7 +133,6 @@ export interface FileRoutesByTo {
   '/class-feedback': typeof AuthenticatedClassFeedbackRoute
   '/notifications': typeof AuthenticatedNotificationsRoute
   '/profile': typeof AuthenticatedProfileRoute
-  '/reports': typeof AuthenticatedReportsRoute
   '/school-rules': typeof AuthenticatedSchoolRulesRoute
   '/seat-planner': typeof AuthenticatedSeatPlannerRoute
   '/settings': typeof AuthenticatedSettingsRoute
@@ -159,7 +151,6 @@ export interface FileRoutesById {
   '/_authenticated/class-feedback': typeof AuthenticatedClassFeedbackRoute
   '/_authenticated/notifications': typeof AuthenticatedNotificationsRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
-  '/_authenticated/reports': typeof AuthenticatedReportsRoute
   '/_authenticated/school-rules': typeof AuthenticatedSchoolRulesRoute
   '/_authenticated/seat-planner': typeof AuthenticatedSeatPlannerRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
@@ -179,7 +170,6 @@ export interface FileRouteTypes {
     | '/class-feedback'
     | '/notifications'
     | '/profile'
-    | '/reports'
     | '/school-rules'
     | '/seat-planner'
     | '/settings'
@@ -195,7 +185,6 @@ export interface FileRouteTypes {
     | '/class-feedback'
     | '/notifications'
     | '/profile'
-    | '/reports'
     | '/school-rules'
     | '/seat-planner'
     | '/settings'
@@ -213,7 +202,6 @@ export interface FileRouteTypes {
     | '/_authenticated/class-feedback'
     | '/_authenticated/notifications'
     | '/_authenticated/profile'
-    | '/_authenticated/reports'
     | '/_authenticated/school-rules'
     | '/_authenticated/seat-planner'
     | '/_authenticated/settings'
@@ -293,13 +281,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSchoolRulesRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
-    '/_authenticated/reports': {
-      id: '/_authenticated/reports'
-      path: '/reports'
-      fullPath: '/reports'
-      preLoaderRoute: typeof AuthenticatedReportsRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
     '/_authenticated/profile': {
       id: '/_authenticated/profile'
       path: '/profile'
@@ -352,7 +333,6 @@ interface AuthenticatedRouteChildren {
   AuthenticatedClassFeedbackRoute: typeof AuthenticatedClassFeedbackRoute
   AuthenticatedNotificationsRoute: typeof AuthenticatedNotificationsRoute
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
-  AuthenticatedReportsRoute: typeof AuthenticatedReportsRoute
   AuthenticatedSchoolRulesRoute: typeof AuthenticatedSchoolRulesRoute
   AuthenticatedSeatPlannerRoute: typeof AuthenticatedSeatPlannerRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
@@ -368,7 +348,6 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedClassFeedbackRoute: AuthenticatedClassFeedbackRoute,
   AuthenticatedNotificationsRoute: AuthenticatedNotificationsRoute,
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
-  AuthenticatedReportsRoute: AuthenticatedReportsRoute,
   AuthenticatedSchoolRulesRoute: AuthenticatedSchoolRulesRoute,
   AuthenticatedSeatPlannerRoute: AuthenticatedSeatPlannerRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
