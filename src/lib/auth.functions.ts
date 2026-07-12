@@ -137,6 +137,20 @@ export const loginWithSecretCode = createServerFn({ method: "POST" })
       throw new Error(signInErr?.message ?? "Sign-in failed");
     }
 
+    // Log the login activity (best-effort)
+    try {
+      await supabaseAdmin.from("activity_logs").insert({
+        actor_id: user.id,
+        actor_name: user.full_name,
+        action: user.role === "captain" ? "Captain Login" : "Student Login",
+        entity: "auth",
+        entity_id: user.id,
+        details: { role: user.role },
+      });
+    } catch (_e) {
+      // don't block login on logging failure
+    }
+
     return {
       access_token: signIn.session.access_token,
       refresh_token: signIn.session.refresh_token,
