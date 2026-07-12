@@ -53,6 +53,13 @@ export type Database = {
             foreignKeyName: "feedback_created_by_fkey"
             columns: ["created_by"]
             isOneToOne: false
+            referencedRelation: "user_identities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "feedback_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
             referencedRelation: "users"
             referencedColumns: ["id"]
           },
@@ -92,6 +99,13 @@ export type Database = {
             foreignKeyName: "feedback_votes_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
+            referencedRelation: "user_identities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "feedback_votes_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
             referencedRelation: "users"
             referencedColumns: ["id"]
           },
@@ -123,6 +137,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "notifications_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user_identities"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "notifications_user_id_fkey"
             columns: ["user_id"]
@@ -186,6 +207,13 @@ export type Database = {
             foreignKeyName: "seat_students_created_by_fkey"
             columns: ["created_by"]
             isOneToOne: false
+            referencedRelation: "user_identities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "seat_students_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
             referencedRelation: "users"
             referencedColumns: ["id"]
           },
@@ -221,6 +249,13 @@ export type Database = {
             foreignKeyName: "sos_requests_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
+            referencedRelation: "user_identities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sos_requests_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
             referencedRelation: "users"
             referencedColumns: ["id"]
           },
@@ -233,9 +268,11 @@ export type Database = {
           full_name: string
           height_cm: number | null
           id: string
+          password_hash: string | null
           role: Database["public"]["Enums"]["app_role"]
           roll_number: string | null
           secret_code: string | null
+          updated_at: string
         }
         Insert: {
           auth_user_id?: string | null
@@ -243,9 +280,11 @@ export type Database = {
           full_name: string
           height_cm?: number | null
           id?: string
+          password_hash?: string | null
           role?: Database["public"]["Enums"]["app_role"]
           roll_number?: string | null
           secret_code?: string | null
+          updated_at?: string
         }
         Update: {
           auth_user_id?: string | null
@@ -253,15 +292,31 @@ export type Database = {
           full_name?: string
           height_cm?: number | null
           id?: string
+          password_hash?: string | null
           role?: Database["public"]["Enums"]["app_role"]
           roll_number?: string | null
           secret_code?: string | null
+          updated_at?: string
         }
         Relationships: []
       }
     }
     Views: {
-      [_ in never]: never
+      user_identities: {
+        Row: {
+          id: string | null
+          secret_code: string | null
+        }
+        Insert: {
+          id?: string | null
+          secret_code?: string | null
+        }
+        Update: {
+          id?: string | null
+          secret_code?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       current_app_user_id: { Args: never; Returns: string }
