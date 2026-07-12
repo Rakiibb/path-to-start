@@ -183,6 +183,7 @@ function SosPage() {
       title="SOS Emergency"
       description="Send an emergency alert to everyone in the classroom."
     >
+      {!isCaptain && (
       <div className="rounded-2xl border border-red-200 bg-white p-8 shadow-sm">
         <div className="flex flex-col items-center text-center">
           <div className="flex h-14 w-14 items-center justify-center rounded-full bg-red-100 text-red-600">
@@ -202,6 +203,7 @@ function SosPage() {
           </Button>
         </div>
       </div>
+      )}
 
       <div className="flex items-center gap-2">
         <div className="relative flex-1">
