@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import type { TablesUpdate } from "@/integrations/supabase/types";
 
 function b64(bytes: Uint8Array): string {
   let s = "";
@@ -62,7 +63,7 @@ export const updateStudentAdmin = createServerFn({ method: "POST" })
   )
   .handler(async ({ data }) => {
     const { supabaseAdmin } = await assertCaptain();
-    const patch: Record<string, unknown> = {};
+    const patch: TablesUpdate<"users"> = {};
     if (data.fullName !== undefined) patch.full_name = data.fullName;
     if (data.heightCm !== undefined) patch.height_cm = data.heightCm;
     if (data.role !== undefined) patch.role = data.role;
