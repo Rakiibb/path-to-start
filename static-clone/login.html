@@ -31,7 +31,7 @@
 
   <div class="tabs">
     <button type="button" class="tab active" id="tab-student" onclick="setRole('student')">Student Login</button>
-    <button type="button" class="tab" id="tab-captain" onclick="setRole('captain')">Captain Login</button>
+    <button type="button" class="tab" id="tab-teacher" onclick="setRole('teacher')">Teacher Login</button>
   </div>
 
   <label for="id">ID</label>
@@ -51,12 +51,12 @@ var studentCodes = (window.SC_STUDENT_CODES || [])
   .map(function (c) { return "<code>" + c + "</code>"; }).join(" · ");
 var DEMO = {
   student: '<b>Student Demo IDs</b> (auto-generated, password <code>1234</code>)<br/>' + studentCodes,
-  captain: '<b>Captain Demo ID</b><br/>ID: <code>captain01</code> · Password: <code>1234</code>',
+  teacher: '<b>Teacher Demo ID</b><br/>ID: <code>teacher01</code> · Password: <code>1234</code>',
 };
 function setRole(r) {
   currentRole = r;
   document.getElementById("tab-student").classList.toggle("active", r === "student");
-  document.getElementById("tab-captain").classList.toggle("active", r === "captain");
+  document.getElementById("tab-teacher").classList.toggle("active", r === "teacher");
   document.getElementById("creds").innerHTML = DEMO[r];
   document.getElementById("err").textContent = "";
 }
@@ -71,7 +71,9 @@ function doLogin(e) {
     document.getElementById("err").textContent = "Invalid ID or password.";
     return false;
   }
-  if (acc.role !== currentRole) {
+  // Map UI "teacher" tab to the underlying "captain" role.
+  var expectedRole = currentRole === "teacher" ? "captain" : currentRole;
+  if (acc.role !== expectedRole) {
     document.getElementById("err").textContent =
       "This ID is a " + acc.role + " account. Switch tabs to continue.";
     return false;
