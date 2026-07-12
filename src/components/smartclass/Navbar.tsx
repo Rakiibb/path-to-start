@@ -10,7 +10,6 @@ const PAGE_TITLES: Record<string, string> = {
   "/captain-feedback": "Captain Feedback",
   "/captain-feedback-list": "All Captain Feedback",
   "/seat-planner": "Seat Planner",
-  "/reports": "Reports",
   "/sos": "SOS",
   "/school-rules": "School Rules",
   "/notifications": "Notifications",
