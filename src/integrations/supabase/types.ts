@@ -269,6 +269,10 @@ export type Database = {
         Args: { _role: Database["public"]["Enums"]["app_role"] }
         Returns: boolean
       }
+      recompute_feedback_status: {
+        Args: { _feedback_id: string }
+        Returns: undefined
+      }
     }
     Enums: {
       app_role: "student" | "captain"
