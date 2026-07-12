@@ -437,6 +437,63 @@ function CaptainFeedbackPage() {
         </form>
       </section>
 
+      {/* All feedback */}
+      <section className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+          <div>
+            <h2 className="text-base font-semibold text-gray-900">All Feedback</h2>
+            <p className="mt-1 text-xs text-gray-500">
+              Every captain feedback ever submitted, newest first.
+            </p>
+          </div>
+          <div className="relative w-full md:w-72">
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+            <Input
+              placeholder="Search title or description"
+              className="pl-9"
+              value={allSearch}
+              onChange={(e) => setAllSearch(e.target.value)}
+            />
+          </div>
+        </div>
+        <div className="mt-5 space-y-3">
+          {allFbQ.isLoading ? (
+            <div className="py-6 text-center text-sm text-gray-500">Loading feedback…</div>
+          ) : (() => {
+            const q = allSearch.trim().toLowerCase();
+            const rows = (allFbQ.data ?? []).filter((r) =>
+              !q ||
+              (r.title ?? "").toLowerCase().includes(q) ||
+              (r.description ?? "").toLowerCase().includes(q),
+            );
+            if (rows.length === 0) {
+              return <div className="py-6 text-center text-sm text-gray-500">No feedback found.</div>;
+            }
+            return rows.map((r) => (
+              <article key={r.id} className="rounded-xl border border-gray-200 p-4">
+                <h3 className="text-sm font-semibold text-gray-900">{r.title}</h3>
+                <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-gray-500">
+                  <span>About <span className="font-medium text-gray-700">{r.captain?.full_name ?? "Unknown"}</span></span>
+                  {r.category && (
+                    <Badge variant="outline" className="text-[11px] text-gray-600">{r.category}</Badge>
+                  )}
+                  <span className="inline-flex items-center gap-1">
+                    <Clock className="h-3 w-3" />
+                    {new Date(r.created_at).toLocaleString(undefined, {
+                      day: "2-digit", month: "short", year: "numeric",
+                      hour: "2-digit", minute: "2-digit",
+                    })}
+                  </span>
+                </div>
+                {r.description && (
+                  <p className="mt-2 whitespace-pre-wrap text-sm text-gray-700">{r.description}</p>
+                )}
+              </article>
+            ));
+          })()}
+        </div>
+      </section>
+
       <Dialog open={!!selectedCaptain} onOpenChange={(o) => !o && setSelectedCaptain(null)}>
         <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
           <DialogHeader>
