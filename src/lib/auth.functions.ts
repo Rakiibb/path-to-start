@@ -16,13 +16,14 @@ function unb64(s: string): Uint8Array {
 }
 
 async function hashPassword(pw: string): Promise<string> {
-  const salt = crypto.getRandomValues(new Uint8Array(16));
+  const salt = crypto.getRandomValues(new Uint8Array(new ArrayBuffer(16)));
   const iters = 100_000;
   const key = await crypto.subtle.importKey(
     "raw", new TextEncoder().encode(pw), "PBKDF2", false, ["deriveBits"],
   );
   const bits = await crypto.subtle.deriveBits(
-    { name: "PBKDF2", salt, iterations: iters, hash: "SHA-256" }, key, 256,
+    { name: "PBKDF2", salt: salt as BufferSource, iterations: iters, hash: "SHA-256" },
+    key, 256,
   );
   return `pbkdf2$${iters}$${b64(salt)}$${b64(new Uint8Array(bits))}`;
 }
@@ -36,7 +37,7 @@ async function verifyPassword(pw: string, stored: string): Promise<boolean> {
     "raw", new TextEncoder().encode(pw), "PBKDF2", false, ["deriveBits"],
   );
   const bits = await crypto.subtle.deriveBits(
-    { name: "PBKDF2", salt, iterations: iters, hash: "SHA-256" },
+    { name: "PBKDF2", salt: salt as BufferSource, iterations: iters, hash: "SHA-256" },
     key, expected.length * 8,
   );
   const got = new Uint8Array(bits);
