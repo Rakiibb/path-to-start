@@ -1,6 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import { getMe } from "./users.service";
-import type { SosRequest, SosStatus } from "./types";
+import type { SosRequest, SosStatus, SosRequestUpdate } from "./types";
 
 export async function listSos(): Promise<SosRequest[]> {
   const { data, error } = await supabase
@@ -20,6 +20,21 @@ export async function createSos(input: {
   const { data, error } = await supabase
     .from("sos_requests")
     .insert({ user_id: me.id, location: input.location, message: input.message })
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+// Owner-only (RLS enforces): attach details after initial SOS creation.
+export async function updateSosDetails(
+  id: string,
+  patch: Pick<SosRequestUpdate, "location" | "message">,
+): Promise<SosRequest> {
+  const { data, error } = await supabase
+    .from("sos_requests")
+    .update(patch)
+    .eq("id", id)
     .select()
     .single();
   if (error) throw error;
