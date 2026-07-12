@@ -366,6 +366,42 @@ function SettingsPage() {
               ))}
             </div>
           </Section>
+
+          <Section
+            title="Demo Mode"
+            description="Populate the app with realistic sample data for hackathon demos. Real data is never touched."
+          >
+            <div className="flex items-start justify-between gap-4 rounded-lg border border-amber-200 bg-amber-50 p-4">
+              <div>
+                <div className="flex items-center gap-2 text-sm font-medium text-gray-900">
+                  <Sparkles className="h-4 w-4 text-amber-600" />
+                  {form.demo_mode ? "Demo Mode is ON" : "Demo Mode is OFF"}
+                </div>
+                <div className="mt-1 text-xs text-gray-600">
+                  Enables 30 students, 3 captains, 50 feedback (verified / pending / rejected),
+                  random votes, 10 SOS history, 20 notifications and 25 school rules.
+                </div>
+              </div>
+              {form.demo_mode ? (
+                <Button
+                  variant="outline"
+                  onClick={() => demo.mutate(false)}
+                  disabled={demo.isPending}
+                >
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  {demo.isPending ? "Removing…" : "Disable"}
+                </Button>
+              ) : (
+                <Button
+                  onClick={() => demo.mutate(true)}
+                  disabled={demo.isPending}
+                >
+                  <Sparkles className="mr-2 h-4 w-4" />
+                  {demo.isPending ? "Seeding…" : "Enable"}
+                </Button>
+              )}
+            </div>
+          </Section>
         </div>
       )}
     </PageLayout>
