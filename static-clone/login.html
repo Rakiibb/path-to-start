@@ -25,16 +25,17 @@
 <form class="login-card" onsubmit="return doLogin(event)">
   <h1>🎓 SmartClass Login</h1>
   <p class="sub">Enter your ID and Password to continue.</p>
-  <label for="id">ID</label>
+  <label for="id">Your Code</label>
   <input id="id" autocomplete="username" required />
   <label for="pw">Password</label>
   <input id="pw" type="password" autocomplete="current-password" required />
   <div class="err" id="err"></div>
   <button type="submit">Login</button>
   <div class="creds">
-    <b>Demo Accounts</b><br/>
-    Student — ID: <code>student</code> · Password: <code>1234</code><br/>
-    Teacher — ID: <code>teacher</code> · Password: <code>1234</code>
+    <b>Demo Accounts</b> (password for all: <code>1234</code>)<br/>
+    <b>Teacher</b> — <code>teacher01</code><br/>
+    <b>Students</b> — <code>falcon42</code>, <code>tiger07</code>, <code>phoenix15</code><br/>
+    <span style="color:#64748b;font-size:12px;">Each student has a unique code. Others only see your code — never your real name or roll.</span>
   </div>
 </form>
 <script src="js/auth.js"></script>
