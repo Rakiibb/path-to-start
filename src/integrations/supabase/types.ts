@@ -235,7 +235,7 @@ export type Database = {
           id: string
           role: Database["public"]["Enums"]["app_role"]
           roll_number: string | null
-          secret_code: string
+          secret_code: string | null
         }
         Insert: {
           auth_user_id?: string | null
@@ -245,7 +245,7 @@ export type Database = {
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
           roll_number?: string | null
-          secret_code: string
+          secret_code?: string | null
         }
         Update: {
           auth_user_id?: string | null
@@ -255,7 +255,7 @@ export type Database = {
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
           roll_number?: string | null
-          secret_code?: string
+          secret_code?: string | null
         }
         Relationships: []
       }
