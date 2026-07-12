@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Download, Upload, DatabaseBackup, Save } from "lucide-react";
+import { Download, Upload, DatabaseBackup, Save, Sparkles, Trash2 } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/settings")({
   component: SettingsPage,
@@ -24,6 +24,7 @@ type Settings = {
   min_password_length: number;
   require_password_number: boolean;
   require_password_symbol: boolean;
+  demo_mode: boolean;
 };
 
 const BACKUP_TABLES = [
@@ -80,7 +81,7 @@ function SettingsPage() {
       const { data, error } = await supabase
         .from("app_settings")
         .select(
-          "school_name, class_name, sos_enabled, feedback_enabled, min_password_length, require_password_number, require_password_symbol",
+          "school_name, class_name, sos_enabled, feedback_enabled, min_password_length, require_password_number, require_password_symbol, demo_mode",
         )
         .eq("id", true)
         .single();
@@ -139,6 +140,20 @@ function SettingsPage() {
 
   const backup = useMutation({
     mutationFn: exportDatabase,
+  });
+
+  const demo = useMutation({
+    mutationFn: async (enable: boolean) => {
+      const fn = enable ? "enable_demo_mode" : "disable_demo_mode";
+      // rpc name not in generated types
+      const { error } = await (supabase.rpc as unknown as (n: string) => Promise<{ error: { message: string } | null }>)(fn);
+      if (error) throw new Error(error.message);
+    },
+    onSuccess: (_d, enable) => {
+      toast.success(enable ? "Demo data loaded" : "Demo data removed");
+      qc.invalidateQueries();
+    },
+    onError: (e: Error) => toast.error(e.message),
   });
 
   const importCsv = useMutation({
