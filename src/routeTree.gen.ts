@@ -22,6 +22,7 @@ import { Route as AuthenticatedReportsRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated.profile'
 import { Route as AuthenticatedNotificationsRouteImport } from './routes/_authenticated.notifications'
 import { Route as AuthenticatedClassFeedbackRouteImport } from './routes/_authenticated.class-feedback'
+import { Route as AuthenticatedCaptainFeedbackListRouteImport } from './routes/_authenticated.captain-feedback-list'
 import { Route as AuthenticatedCaptainFeedbackRouteImport } from './routes/_authenticated.captain-feedback'
 import { Route as AuthenticatedActivityLogsRouteImport } from './routes/_authenticated.activity-logs'
 
@@ -94,6 +95,12 @@ const AuthenticatedClassFeedbackRoute =
     path: '/class-feedback',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedCaptainFeedbackListRoute =
+  AuthenticatedCaptainFeedbackListRouteImport.update({
+    id: '/captain-feedback-list',
+    path: '/captain-feedback-list',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedCaptainFeedbackRoute =
   AuthenticatedCaptainFeedbackRouteImport.update({
     id: '/captain-feedback',
@@ -113,6 +120,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/activity-logs': typeof AuthenticatedActivityLogsRoute
   '/captain-feedback': typeof AuthenticatedCaptainFeedbackRoute
+  '/captain-feedback-list': typeof AuthenticatedCaptainFeedbackListRoute
   '/class-feedback': typeof AuthenticatedClassFeedbackRoute
   '/notifications': typeof AuthenticatedNotificationsRoute
   '/profile': typeof AuthenticatedProfileRoute
@@ -128,6 +136,7 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/activity-logs': typeof AuthenticatedActivityLogsRoute
   '/captain-feedback': typeof AuthenticatedCaptainFeedbackRoute
+  '/captain-feedback-list': typeof AuthenticatedCaptainFeedbackListRoute
   '/class-feedback': typeof AuthenticatedClassFeedbackRoute
   '/notifications': typeof AuthenticatedNotificationsRoute
   '/profile': typeof AuthenticatedProfileRoute
@@ -146,6 +155,7 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/_authenticated/activity-logs': typeof AuthenticatedActivityLogsRoute
   '/_authenticated/captain-feedback': typeof AuthenticatedCaptainFeedbackRoute
+  '/_authenticated/captain-feedback-list': typeof AuthenticatedCaptainFeedbackListRoute
   '/_authenticated/class-feedback': typeof AuthenticatedClassFeedbackRoute
   '/_authenticated/notifications': typeof AuthenticatedNotificationsRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
@@ -165,6 +175,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/activity-logs'
     | '/captain-feedback'
+    | '/captain-feedback-list'
     | '/class-feedback'
     | '/notifications'
     | '/profile'
@@ -180,6 +191,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/activity-logs'
     | '/captain-feedback'
+    | '/captain-feedback-list'
     | '/class-feedback'
     | '/notifications'
     | '/profile'
@@ -197,6 +209,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/_authenticated/activity-logs'
     | '/_authenticated/captain-feedback'
+    | '/_authenticated/captain-feedback-list'
     | '/_authenticated/class-feedback'
     | '/_authenticated/notifications'
     | '/_authenticated/profile'
@@ -308,6 +321,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedClassFeedbackRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/captain-feedback-list': {
+      id: '/_authenticated/captain-feedback-list'
+      path: '/captain-feedback-list'
+      fullPath: '/captain-feedback-list'
+      preLoaderRoute: typeof AuthenticatedCaptainFeedbackListRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/captain-feedback': {
       id: '/_authenticated/captain-feedback'
       path: '/captain-feedback'
@@ -328,6 +348,7 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedRouteChildren {
   AuthenticatedActivityLogsRoute: typeof AuthenticatedActivityLogsRoute
   AuthenticatedCaptainFeedbackRoute: typeof AuthenticatedCaptainFeedbackRoute
+  AuthenticatedCaptainFeedbackListRoute: typeof AuthenticatedCaptainFeedbackListRoute
   AuthenticatedClassFeedbackRoute: typeof AuthenticatedClassFeedbackRoute
   AuthenticatedNotificationsRoute: typeof AuthenticatedNotificationsRoute
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
@@ -343,6 +364,7 @@ interface AuthenticatedRouteChildren {
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedActivityLogsRoute: AuthenticatedActivityLogsRoute,
   AuthenticatedCaptainFeedbackRoute: AuthenticatedCaptainFeedbackRoute,
+  AuthenticatedCaptainFeedbackListRoute: AuthenticatedCaptainFeedbackListRoute,
   AuthenticatedClassFeedbackRoute: AuthenticatedClassFeedbackRoute,
   AuthenticatedNotificationsRoute: AuthenticatedNotificationsRoute,
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
