@@ -32,7 +32,7 @@ const items = [
   { to: "/profile", label: "Profile", icon: User },
 ] as const;
 
-const captainItems = [
+const extraItems = [
   { to: "/student-management", label: "Student Management", icon: Users },
   { to: "/settings", label: "Settings", icon: SettingsIcon },
 ] as const;
@@ -44,12 +44,8 @@ export function Sidebar() {
     queryFn: getCurrentAppUser,
     staleTime: 60_000,
   });
-  const isCaptain = session?.role === "captain";
-  // Captains don't submit feedback themselves — hide the create page from them.
-  const baseItems = isCaptain
-    ? items.filter((i) => i.to !== "/class-feedback")
-    : items;
-  const allItems = isCaptain ? [...baseItems, ...captainItems] : baseItems;
+  // Everyone (students and captains) sees the same navigation.
+  const allItems = [...items, ...extraItems];
 
   const [collapsed, setCollapsed] = useState<boolean>(false);
   useEffect(() => {
