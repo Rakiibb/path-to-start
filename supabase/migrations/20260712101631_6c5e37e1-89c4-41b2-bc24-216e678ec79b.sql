@@ -1,0 +1,1 @@
+CREATE POLICY "Captains delete feedback" ON public.feedback FOR DELETE TO authenticated USING (has_role('captain'::app_role));
