@@ -179,8 +179,8 @@ export const loginWithFixedAccount = createServerFn({ method: "POST" })
           id: "teacher",
           password: "1234",
           fullName: "Teacher",
-          rollNumber: "teacher",
-          secretCode: "teacher",
+          rollNumber: "fixed_teacher",
+          secretCode: "fixed_teacher",
           role: "captain" as const,
           activity: "Teacher Login",
         }
@@ -188,8 +188,8 @@ export const loginWithFixedAccount = createServerFn({ method: "POST" })
           id: "student",
           password: "1234",
           fullName: "Student",
-          rollNumber: "student",
-          secretCode: "student",
+          rollNumber: "fixed_student",
+          secretCode: "fixed_student",
           role: "student" as const,
           activity: "Student Login",
         };
@@ -201,16 +201,32 @@ export const loginWithFixedAccount = createServerFn({ method: "POST" })
     let { data: user, error: userErr } = await supabaseAdmin
       .from("users")
       .select("id, auth_user_id, full_name, role")
-      .eq("roll_number", account.rollNumber)
+      .eq("secret_code", account.secretCode)
+      .not("auth_user_id", "is", null)
       .limit(1)
       .maybeSingle();
 
     if (userErr) throw new Error(userErr.message);
 
     if (!user) {
+      const id = crypto.randomUUID();
+      const email = `user-${id}@smartclass.local`;
+      const authPw = `sc_${id}_${process.env.SUPABASE_SERVICE_ROLE_KEY?.slice(-16) ?? "local"}`;
+      const { data: created, error: createErr } = await supabaseAdmin.auth.admin.createUser({
+        email,
+        password: authPw,
+        email_confirm: true,
+        user_metadata: { app_user_id: id, role: account.role },
+      });
+      if (createErr || !created?.user) {
+        throw new Error(createErr?.message ?? "Could not create auth user");
+      }
+
       const inserted = await supabaseAdmin
         .from("users")
         .insert({
+          id,
+          auth_user_id: created.user.id,
           full_name: account.fullName,
           roll_number: account.rollNumber,
           secret_code: account.secretCode,
@@ -221,11 +237,13 @@ export const loginWithFixedAccount = createServerFn({ method: "POST" })
         .single();
 
       if (inserted.error) {
+        await supabaseAdmin.auth.admin.deleteUser(created.user.id);
         if (inserted.error.code !== "23505") throw new Error(inserted.error.message);
         const existing = await supabaseAdmin
           .from("users")
           .select("id, auth_user_id, full_name, role")
           .eq("secret_code", account.secretCode)
+          .not("auth_user_id", "is", null)
           .limit(1)
           .maybeSingle();
         if (existing.error || !existing.data) {
@@ -240,25 +258,8 @@ export const loginWithFixedAccount = createServerFn({ method: "POST" })
     const email = `user-${user.id}@smartclass.local`;
     const authPw = `sc_${user.id}_${process.env.SUPABASE_SERVICE_ROLE_KEY?.slice(-16) ?? "local"}`;
 
-    let authUserId = user.auth_user_id;
-    if (!authUserId) {
-      const { data: created, error: createErr } = await supabaseAdmin.auth.admin.createUser({
-        email,
-        password: authPw,
-        email_confirm: true,
-        user_metadata: { app_user_id: user.id, role: user.role },
-      });
-      if (createErr || !created?.user) {
-        throw new Error(createErr?.message ?? "Could not create auth user");
-      }
-      authUserId = created.user.id;
-      const { error: linkErr } = await supabaseAdmin
-        .from("users")
-        .update({ auth_user_id: authUserId })
-        .eq("id", user.id);
-      if (linkErr) throw new Error(linkErr.message);
-    } else {
-      await supabaseAdmin.auth.admin.updateUserById(authUserId, {
+    if (user.auth_user_id) {
+      await supabaseAdmin.auth.admin.updateUserById(user.auth_user_id, {
         password: authPw,
         user_metadata: { app_user_id: user.id, role: user.role },
       });
