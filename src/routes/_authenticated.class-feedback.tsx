@@ -99,7 +99,6 @@ function ClassFeedbackPage() {
       reset();
       await qc.invalidateQueries({ queryKey: ["my-last-feedback"] });
       await qc.invalidateQueries({ queryKey: ["dashboard"] });
-      await qc.invalidateQueries({ queryKey: ["my-last-feedback"] });
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Failed to submit feedback";
       toast.error(msg);
