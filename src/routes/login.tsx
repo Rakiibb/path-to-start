@@ -54,8 +54,8 @@ function LoginPage() {
         <form onSubmit={onSubmit} className="mt-8 space-y-4">
           <div>
             <label htmlFor="roll" className="block text-sm font-medium text-gray-700">Roll Number</label>
-            <input id="roll" type="text" autoComplete="username" value={rollNumber}
-              onChange={(e) => { setRollNumber(e.target.value); setError(""); }}
+            <input id="roll" type="text" inputMode="numeric" pattern="[0-9]*" autoComplete="username" value={rollNumber}
+              onChange={(e) => { setRollNumber(e.target.value.replace(/\D/g, "")); setError(""); }}
               placeholder="e.g. 21" className={input} />
           </div>
 
