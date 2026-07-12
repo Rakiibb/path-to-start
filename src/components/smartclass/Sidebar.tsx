@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { getCurrentAppUser } from "@/lib/auth";
 import {
   LayoutDashboard,
-  MessageSquare,
   ShieldAlert,
   LayoutGrid,
   Siren,
@@ -13,7 +12,6 @@ import {
   User,
   GraduationCap,
   Users,
-  ListChecks,
   PanelLeftClose,
   PanelLeftOpen,
   Sparkles,
@@ -22,9 +20,7 @@ import { cn } from "@/lib/utils";
 
 const items = [
   { to: "/", label: "Dashboard", icon: LayoutDashboard },
-  { to: "/class-feedback", label: "Class Feedback", icon: MessageSquare },
   { to: "/captain-feedback", label: "Captain Feedback", icon: ShieldAlert },
-  { to: "/captain-feedback-list", label: "All Captain Feedback", icon: ListChecks },
   { to: "/seat-planner", label: "Seat Planner", icon: LayoutGrid },
   { to: "/sos", label: "SOS", icon: Siren },
   { to: "/school-rules", label: "School Rules", icon: BookOpen },

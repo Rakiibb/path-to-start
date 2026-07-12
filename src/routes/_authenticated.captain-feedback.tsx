@@ -12,8 +12,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Search, AlertTriangle, ShieldCheck } from "lucide-react";
+import { Search, AlertTriangle, ShieldCheck, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Badge } from "@/components/ui/badge";
 
 const CATEGORIES = ["Academic", "Behavior", "Leadership", "Fund Issue", "Communication", "Other"] as const;
 
@@ -31,6 +33,12 @@ type CapFeedback = {
   target_captain_id: string;
   status: "Pending" | "Verified" | "Rejected";
   created_at: string;
+};
+
+type CapFeedbackDetail = CapFeedback & {
+  title: string;
+  description: string | null;
+  category: string | null;
 };
 
 type Tier = "Safe" | "Warning" | "High Risk" | "Red Alert";
@@ -110,14 +118,16 @@ function ProgressRing({ value, tier }: { value: number; tier: Tier }) {
   );
 }
 
-function CaptainCard({ s }: { s: Stats }) {
+function CaptainCard({ s, onClick }: { s: Stats; onClick: () => void }) {
   const t = TIER_STYLES[s.tier];
   const isRed = s.tier === "Red Alert";
   const progress = Math.min(3, s.verified);
   return (
-    <div
+    <button
+      type="button"
+      onClick={onClick}
       className={cn(
-        "group relative rounded-2xl border bg-card p-6 shadow-soft card-hover",
+        "group relative w-full text-left rounded-2xl border bg-card p-6 shadow-soft card-hover cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-primary",
         t.border,
         isRed && "animate-red-alert glow-red",
       )}
@@ -160,7 +170,7 @@ function CaptainCard({ s }: { s: Stats }) {
           <AlertTriangle className="h-4 w-4" /> RED ALERT
         </div>
       )}
-    </div>
+    </button>
   );
 }
 
@@ -181,6 +191,22 @@ function CaptainFeedbackPage() {
 
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<"All" | Tier>("All");
+  const [selectedCaptain, setSelectedCaptain] = useState<Captain | null>(null);
+
+  const detailQ = useQuery({
+    queryKey: ["captain-feedback-detail", selectedCaptain?.id],
+    enabled: !!selectedCaptain,
+    queryFn: async (): Promise<CapFeedbackDetail[]> => {
+      const { data, error } = await supabase
+        .from("feedback")
+        .select("id, target_captain_id, status, created_at, title, description, category")
+        .eq("feedback_type", "Captain")
+        .eq("target_captain_id", selectedCaptain!.id)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return (data ?? []) as CapFeedbackDetail[];
+    },
+  });
 
   useEffect(() => {
     const ch = supabase
@@ -333,7 +359,13 @@ function CaptainFeedbackPage() {
           </div>
         ) : (
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {visible.map((s) => <CaptainCard key={s.captain.id} s={s} />)}
+            {visible.map((s) => (
+              <CaptainCard
+                key={s.captain.id}
+                s={s}
+                onClick={() => setSelectedCaptain(s.captain)}
+              />
+            ))}
           </div>
         )}
       </section>
@@ -389,6 +421,62 @@ function CaptainFeedbackPage() {
           </div>
         </form>
       </section>
+
+      <Dialog open={!!selectedCaptain} onOpenChange={(o) => !o && setSelectedCaptain(null)}>
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              Feedback about {selectedCaptain?.full_name}
+            </DialogTitle>
+          </DialogHeader>
+          {detailQ.isLoading ? (
+            <div className="py-8 text-center text-sm text-gray-500">Loading…</div>
+          ) : !detailQ.data || detailQ.data.length === 0 ? (
+            <div className="py-8 text-center text-sm text-gray-500">
+              No feedback submitted about this captain yet.
+            </div>
+          ) : (
+            <div className="space-y-3">
+              <div className="text-xs text-gray-500">
+                Total {detailQ.data.length} feedback{detailQ.data.length === 1 ? "" : "s"}
+              </div>
+              {detailQ.data.map((r) => (
+                <article key={r.id} className="rounded-xl border border-gray-200 p-4">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h3 className="text-sm font-semibold text-gray-900">{r.title}</h3>
+                    <Badge
+                      variant="outline"
+                      className={cn(
+                        "text-[11px]",
+                        r.status === "Verified" && "bg-emerald-50 text-emerald-700 border-emerald-200",
+                        r.status === "Pending" && "bg-amber-50 text-amber-700 border-amber-200",
+                        r.status === "Rejected" && "bg-gray-100 text-gray-600 border-gray-200",
+                      )}
+                    >
+                      {r.status}
+                    </Badge>
+                    {r.category && (
+                      <Badge variant="outline" className="text-[11px] text-gray-600">
+                        {r.category}
+                      </Badge>
+                    )}
+                  </div>
+                  <div className="mt-1 flex items-center gap-1 text-xs text-gray-500">
+                    <Clock className="h-3 w-3" />
+                    {new Date(r.created_at).toLocaleString(undefined, {
+                      day: "2-digit", month: "short", year: "numeric",
+                      hour: "2-digit", minute: "2-digit",
+                    })}
+                  </div>
+                  {r.description && (
+                    <p className="mt-2 whitespace-pre-wrap text-sm text-gray-700">{r.description}</p>
+                  )}
+                </article>
+              ))}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </PageLayout>
   );
 }
