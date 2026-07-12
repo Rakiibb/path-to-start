@@ -78,6 +78,25 @@
           <button type="submit" class="btn">Submit Feedback</button>
         </form>
       </div>
+
+      <div class="card mt-4">
+        <div class="row between mb-4" style="align-items:center;">
+          <div>
+            <h3 style="margin:0;">All Feedback</h3>
+            <p class="text-xs text-muted" style="margin:2px 0 0;">Every feedback ever submitted, newest first.</p>
+          </div>
+          <div class="row" style="gap:8px;">
+            <input class="input" id="fb-search" placeholder="Search title or description..." style="min-width:220px;" />
+            <select class="select" id="fb-filter-status">
+              <option value="">All statuses</option>
+              <option>Pending</option>
+              <option>Verified</option>
+              <option>Rejected</option>
+            </select>
+          </div>
+        </div>
+        <div id="all-feedback-list"></div>
+      </div>
     </div>
   </div>
 </div>
@@ -178,6 +197,47 @@ document.getElementById("fb-form").addEventListener("submit", e => {
 });
 
 render();
+
+function renderAllFeedback() {
+  const q = (document.getElementById("fb-search").value || "").trim().toLowerCase();
+  const st = document.getElementById("fb-filter-status").value;
+  const list = DB.feedback
+    .filter(f => !st || f.status === st)
+    .filter(f => !q ||
+      (f.title || "").toLowerCase().includes(q) ||
+      (f.description || "").toLowerCase().includes(q))
+    .sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+  const box = document.getElementById("all-feedback-list");
+  if (list.length === 0) {
+    box.innerHTML = '<p class="text-muted text-sm" style="padding:24px 0;text-align:center;">No feedback found.</p>';
+    return;
+  }
+  box.innerHTML = list.map(f => {
+    const cap = DB.captains.find(c => c.id === f.captainId);
+    return `
+      <div class="fb-item">
+        <div class="row between">
+          <h4>${f.title}</h4>
+          <span class="badge ${f.status.toLowerCase()}">${f.status}</span>
+        </div>
+        <div class="meta">
+          <span>👤 About <b>${cap ? cap.name : 'Unknown'}</b></span>
+          ${f.category ? `<span class="badge gray">${f.category}</span>` : ''}
+          <span>🕒 ${fmtDateTime(f.createdAt)}</span>
+        </div>
+        <p>${f.description}</p>
+      </div>
+    `;
+  }).join("");
+}
+document.getElementById("fb-search").addEventListener("input", renderAllFeedback);
+document.getElementById("fb-filter-status").addEventListener("change", renderAllFeedback);
+
+// Re-render the list whenever new feedback is submitted.
+const _origRender = render;
+render = function () { _origRender(); renderAllFeedback(); };
+renderAllFeedback();
 </script>
 </body>
 </html>
