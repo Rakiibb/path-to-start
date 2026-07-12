@@ -13,6 +13,7 @@ const PAGE_TITLES: Record<string, string> = {
   "/sos": "SOS",
   "/school-rules": "School Rules",
   "/notifications": "Notifications",
+  "/ai-syllabus": "AI Syllabus",
   "/profile": "Profile",
   "/student-management": "Student Management",
   "/settings": "Settings",
