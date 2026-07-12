@@ -266,53 +266,6 @@ function SettingsPage() {
           </Section>
 
           <Section
-            title="Default Password Policy"
-            description="Applied to new student accounts."
-          >
-            <div className="grid gap-4 md:grid-cols-3">
-              <div className="space-y-2">
-                <Label>Minimum Length</Label>
-                <Input
-                  type="number"
-                  min={4}
-                  max={64}
-                  value={form.min_password_length}
-                  onChange={(e) =>
-                    setForm({
-                      ...form,
-                      min_password_length: Number(e.target.value) || 6,
-                    })
-                  }
-                />
-              </div>
-              <ToggleRow
-                label="Require a number"
-                checked={form.require_password_number}
-                onChange={(v) => setForm({ ...form, require_password_number: v })}
-              />
-              <ToggleRow
-                label="Require a symbol"
-                checked={form.require_password_symbol}
-                onChange={(v) => setForm({ ...form, require_password_symbol: v })}
-              />
-            </div>
-            <div className="mt-4">
-              <Button
-                onClick={() =>
-                  save.mutate({
-                    min_password_length: form.min_password_length,
-                    require_password_number: form.require_password_number,
-                    require_password_symbol: form.require_password_symbol,
-                  })
-                }
-                disabled={save.isPending}
-              >
-                <Save className="mr-2 h-4 w-4" /> Save Policy
-              </Button>
-            </div>
-          </Section>
-
-          <Section
             title="Data"
             description="Export, back up or import classroom data."
           >
