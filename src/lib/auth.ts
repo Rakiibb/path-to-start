@@ -1,5 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
-import { loginWithSecretCode } from "./auth.functions";
+import { loginWithFixedAccount, loginWithSecretCode } from "./auth.functions";
 
 export type Role = "student" | "captain";
 
@@ -18,6 +18,27 @@ export async function signInWithCode(
 ): Promise<Session & { firstLogin: boolean }> {
   const result = await loginWithSecretCode({
     data: { rollNumber, password, secretCode: secretCode ?? "" },
+  });
+  const { error } = await supabase.auth.setSession({
+    access_token: result.access_token,
+    refresh_token: result.refresh_token,
+  });
+  if (error) throw error;
+  return {
+    id: result.user.id,
+    role: result.user.role as Role,
+    name: result.user.full_name,
+    firstLogin: result.firstLogin,
+  };
+}
+
+export async function signInFixedAccount(
+  accountType: "student" | "teacher",
+  id: string,
+  password: string,
+): Promise<Session & { firstLogin: boolean }> {
+  const result = await loginWithFixedAccount({
+    data: { accountType, id, password },
   });
   const { error } = await supabase.auth.setSession({
     access_token: result.access_token,
