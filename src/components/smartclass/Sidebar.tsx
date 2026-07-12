@@ -17,6 +17,7 @@ import {
   Settings as SettingsIcon,
   PanelLeftClose,
   PanelLeftOpen,
+  Sparkles,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -29,6 +30,7 @@ const items = [
   { to: "/sos", label: "SOS", icon: Siren },
   { to: "/school-rules", label: "School Rules", icon: BookOpen },
   { to: "/notifications", label: "Notifications", icon: Bell },
+  { to: "/ai-syllabus", label: "AI Syllabus", icon: Sparkles },
   { to: "/profile", label: "Profile", icon: User },
 ] as const;
 
