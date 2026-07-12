@@ -43,11 +43,14 @@ type Stats = {
   tier: Tier;
 };
 
-const TIER_STYLES: Record<Tier, { border: string; ring: string; badge: string; dot: string; label: string }> = {
-  Safe:        { border: "border-emerald-300", ring: "", badge: "bg-emerald-100 text-emerald-700",  dot: "bg-emerald-500", label: "🟢 Safe" },
-  Warning:     { border: "border-yellow-300",  ring: "", badge: "bg-yellow-100 text-yellow-800",   dot: "bg-yellow-500",  label: "🟡 Warning" },
-  "High Risk": { border: "border-orange-300",  ring: "", badge: "bg-orange-100 text-orange-800",   dot: "bg-orange-500",  label: "🟠 High Risk" },
-  "Red Alert": { border: "border-red-400", ring: "shadow-[0_0_0_4px_rgba(248,113,113,0.25)]", badge: "bg-red-600 text-white", dot: "bg-red-600", label: "🔴 RED ALERT" },
+const TIER_STYLES: Record<
+  Tier,
+  { border: string; badge: string; dot: string; label: string; ring: string; track: string }
+> = {
+  Safe:        { border: "border-emerald-200",  badge: "bg-emerald-50 text-emerald-700 border border-emerald-100",  dot: "bg-emerald-500", label: "Safe",       ring: "stroke-emerald-500", track: "stroke-emerald-100" },
+  Warning:     { border: "border-yellow-200",   badge: "bg-yellow-50 text-yellow-800 border border-yellow-100",    dot: "bg-yellow-500",  label: "Warning",    ring: "stroke-yellow-500",  track: "stroke-yellow-100" },
+  "High Risk": { border: "border-orange-200",   badge: "bg-orange-50 text-orange-800 border border-orange-100",    dot: "bg-orange-500",  label: "High Risk",  ring: "stroke-orange-500",  track: "stroke-orange-100" },
+  "Red Alert": { border: "border-red-400",      badge: "bg-red-600 text-white",                                    dot: "bg-red-600",     label: "RED ALERT",  ring: "stroke-red-500",     track: "stroke-red-100" },
 };
 
 function tierFor(verified: number): Tier {
@@ -85,40 +88,75 @@ async function loadCaptainFeedback(): Promise<CapFeedback[]> {
   return (data ?? []).filter((r) => r.target_captain_id) as CapFeedback[];
 }
 
+function ProgressRing({ value, tier }: { value: number; tier: Tier }) {
+  const t = TIER_STYLES[tier];
+  const pct = Math.min(1, value / 3);
+  const r = 22;
+  const c = 2 * Math.PI * r;
+  return (
+    <svg width="56" height="56" viewBox="0 0 56 56" className="shrink-0 -rotate-90">
+      <circle cx="28" cy="28" r={r} strokeWidth="6" fill="none" className={t.track} />
+      <circle
+        cx="28" cy="28" r={r} strokeWidth="6" fill="none" strokeLinecap="round"
+        className={cn(t.ring, "transition-[stroke-dashoffset] duration-500")}
+        strokeDasharray={c}
+        strokeDashoffset={c * (1 - pct)}
+      />
+      <text x="28" y="32" textAnchor="middle" transform="rotate(90 28 28)"
+        className="fill-foreground text-[13px] font-semibold">
+        {value}/3
+      </text>
+    </svg>
+  );
+}
+
 function CaptainCard({ s }: { s: Stats }) {
   const t = TIER_STYLES[s.tier];
+  const isRed = s.tier === "Red Alert";
   const progress = Math.min(3, s.verified);
   return (
-    <div className={cn("rounded-2xl border-2 bg-white p-5 shadow-sm transition", t.border, t.ring)}>
-      <div className="flex items-center gap-3">
-        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-sky-100 text-sky-700 font-semibold">
+    <div
+      className={cn(
+        "group relative rounded-2xl border bg-card p-5 shadow-soft transition hover:-translate-y-0.5 hover:shadow-lift",
+        t.border,
+        isRed && "animate-red-alert",
+      )}
+    >
+      <div className="flex items-start gap-4">
+        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary font-semibold">
           {initials(s.captain.full_name)}
         </div>
-        <div className="flex-1 min-w-0">
-          <div className="truncate text-sm font-semibold text-gray-900">{s.captain.full_name}</div>
-          <span className={cn("mt-1 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium", t.badge)}>
-            <span className={cn("h-1.5 w-1.5 rounded-full", t.dot)} /> {t.label}
+        <div className="min-w-0 flex-1">
+          <div className="truncate text-[15px] font-semibold text-foreground">{s.captain.full_name}</div>
+          <span className={cn("mt-1.5 inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide", t.badge)}>
+            {isRed && <AlertTriangle className="h-3 w-3" />}
+            {!isRed && <span className={cn("h-1.5 w-1.5 rounded-full", t.dot)} />}
+            {t.label}
           </span>
         </div>
+        <ProgressRing value={progress} tier={s.tier} />
       </div>
-      <div className="mt-4 grid grid-cols-3 gap-2 text-center">
+      <div className="mt-5 grid grid-cols-3 gap-2 text-center">
         <Stat label="Total" value={s.total} />
-        <Stat label="Verified" value={s.verified} tone="text-red-600" />
+        <Stat label="Verified" value={s.verified} tone={isRed ? "text-red-600" : "text-foreground"} />
         <Stat label="Pending" value={s.pending} tone="text-amber-600" />
       </div>
       <div className="mt-4">
-        <div className="mb-1 flex items-center justify-between text-xs text-gray-500">
+        <div className="mb-1.5 flex items-center justify-between text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
           <span>Verified progress</span>
           <span className="font-mono">{progress} / 3</span>
         </div>
         <div className="flex gap-1">
           {[0, 1, 2].map((i) => (
-            <div key={i} className={cn("h-2 flex-1 rounded", i < progress ? (s.tier === "Red Alert" ? "bg-red-500" : "bg-sky-500") : "bg-gray-200")} />
+            <div key={i} className={cn(
+              "h-1.5 flex-1 rounded-full transition-colors",
+              i < progress ? (isRed ? "bg-red-500" : "bg-primary") : "bg-muted",
+            )} />
           ))}
         </div>
       </div>
-      {s.tier === "Red Alert" && (
-        <div className="mt-4 flex items-center justify-center gap-2 rounded-lg bg-red-600 px-3 py-2 text-sm font-bold text-white">
+      {isRed && (
+        <div className="mt-4 flex items-center justify-center gap-2 rounded-xl bg-red-600 px-3 py-2.5 text-sm font-bold uppercase tracking-wider text-white shadow-lift">
           <AlertTriangle className="h-4 w-4" /> RED ALERT
         </div>
       )}
