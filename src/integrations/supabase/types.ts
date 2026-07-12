@@ -233,9 +233,11 @@ export type Database = {
           full_name: string
           height_cm: number | null
           id: string
+          password_hash: string | null
           role: Database["public"]["Enums"]["app_role"]
           roll_number: string | null
           secret_code: string | null
+          updated_at: string
         }
         Insert: {
           auth_user_id?: string | null
@@ -243,9 +245,11 @@ export type Database = {
           full_name: string
           height_cm?: number | null
           id?: string
+          password_hash?: string | null
           role?: Database["public"]["Enums"]["app_role"]
           roll_number?: string | null
           secret_code?: string | null
+          updated_at?: string
         }
         Update: {
           auth_user_id?: string | null
@@ -253,9 +257,11 @@ export type Database = {
           full_name?: string
           height_cm?: number | null
           id?: string
+          password_hash?: string | null
           role?: Database["public"]["Enums"]["app_role"]
           roll_number?: string | null
           secret_code?: string | null
+          updated_at?: string
         }
         Relationships: []
       }
@@ -265,6 +271,13 @@ export type Database = {
     }
     Functions: {
       current_app_user_id: { Args: never; Returns: string }
+      get_user_identities: {
+        Args: { _ids: string[] }
+        Returns: {
+          id: string
+          secret_code: string
+        }[]
+      }
       has_role: {
         Args: { _role: Database["public"]["Enums"]["app_role"] }
         Returns: boolean

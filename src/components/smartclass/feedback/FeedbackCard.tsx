@@ -25,6 +25,7 @@ export interface FeedbackCardProps {
   feedback: Feedback;
   votes: FeedbackVote[];
   currentUserId: string | null;
+  authorHandle?: string | null;
   onVote: (vote: boolean) => Promise<void> | void;
   onEdit: () => void;
   onDelete: () => void;
@@ -34,6 +35,7 @@ export function FeedbackCard({
   feedback,
   votes,
   currentUserId,
+  authorHandle,
   onVote,
   onEdit,
   onDelete,
@@ -72,6 +74,9 @@ export function FeedbackCard({
               </span>
             )}
             <span className="text-gray-400">{timeAgo(feedback.created_at)}</span>
+            <span className="text-gray-400">
+              · Posted by <span className="font-medium text-sky-700">@{authorHandle ?? "anonymous"}</span>
+            </span>
           </div>
         </div>
         <span
