@@ -83,13 +83,43 @@ p { margin: 0; }
 .navbar .subtitle { font-size: 11px; text-transform: uppercase; color: var(--muted); letter-spacing: .05em; }
 .navbar .right { margin-left: auto; display: flex; align-items: center; gap: 12px; }
 .sos-btn {
-  background: var(--red); color: #fff; border: none;
-  padding: 8px 14px; border-radius: 999px;
-  font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: .05em;
-  display: inline-flex; align-items: center; gap: 6px;
-  box-shadow: 0 4px 12px rgba(220,38,38,.3);
+  position: relative;
+  background: linear-gradient(135deg, #ff4d4d 0%, #dc2626 55%, #991b1b 100%);
+  color: #fff; border: none; cursor: pointer;
+  padding: 9px 18px 9px 14px; border-radius: 999px;
+  font-weight: 800; font-size: 11px; text-transform: uppercase; letter-spacing: .08em;
+  display: inline-flex; align-items: center; gap: 7px;
+  box-shadow:
+    0 6px 16px rgba(220,38,38,.45),
+    0 0 0 1px rgba(255,255,255,.15) inset,
+    0 -2px 6px rgba(0,0,0,.25) inset;
+  transition: transform .15s ease, box-shadow .2s ease, filter .2s ease;
+  animation: sosPulse 2s ease-in-out infinite;
 }
-.sos-btn:hover { background: #b91c1c; }
+.sos-btn > span:first-child {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 18px; height: 18px; border-radius: 50%;
+  background: rgba(255,255,255,.18);
+  font-size: 11px;
+  animation: sosBlink 1.2s ease-in-out infinite;
+}
+.sos-btn:hover {
+  transform: translateY(-1px) scale(1.03);
+  filter: brightness(1.08);
+  box-shadow:
+    0 10px 24px rgba(220,38,38,.55),
+    0 0 0 1px rgba(255,255,255,.2) inset,
+    0 -2px 6px rgba(0,0,0,.25) inset;
+}
+.sos-btn:active { transform: translateY(0) scale(.98); }
+@keyframes sosPulse {
+  0%, 100% { box-shadow: 0 6px 16px rgba(220,38,38,.45), 0 0 0 0 rgba(220,38,38,.55), 0 0 0 1px rgba(255,255,255,.15) inset, 0 -2px 6px rgba(0,0,0,.25) inset; }
+  50%      { box-shadow: 0 6px 16px rgba(220,38,38,.45), 0 0 0 8px rgba(220,38,38,0),   0 0 0 1px rgba(255,255,255,.15) inset, 0 -2px 6px rgba(0,0,0,.25) inset; }
+}
+@keyframes sosBlink {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: .45; }
+}
 .avatar {
   width: 34px; height: 34px; border-radius: 50%;
   background: var(--primary-light); color: var(--primary-dark);
