@@ -26,7 +26,6 @@ const items = [
   { to: "/captain-feedback", label: "Captain Feedback", icon: ShieldAlert },
   { to: "/captain-feedback-list", label: "All Captain Feedback", icon: ListChecks },
   { to: "/seat-planner", label: "Seat Planner", icon: LayoutGrid },
-  { to: "/reports", label: "Reports", icon: FileBarChart },
   { to: "/sos", label: "SOS", icon: Siren },
   { to: "/school-rules", label: "School Rules", icon: BookOpen },
   { to: "/notifications", label: "Notifications", icon: Bell },
