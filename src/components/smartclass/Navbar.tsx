@@ -1,4 +1,4 @@
-import { Search, LogOut, Siren } from "lucide-react";
+import { Search, LogOut, AlertTriangle } from "lucide-react";
 import { useNavigate, useRouterState } from "@tanstack/react-router";
 import { signOut, type Session } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
@@ -50,13 +50,14 @@ export function Navbar({ session }: { session: Session | null }) {
           onClick={() => navigate({ to: "/sos" })}
           aria-label="SOS Emergency"
           title="SOS Emergency"
-          className="relative flex h-11 w-11 items-center justify-center rounded-full bg-red-600 text-white text-[11px] font-bold tracking-wide shadow-lg shadow-red-600/40 ring-2 ring-red-300 hover:bg-red-700 focus:outline-none focus:ring-4 focus:ring-red-300 animate-pulse"
+          className="group relative inline-flex items-center gap-1.5 rounded-full bg-red-600 px-3.5 py-1.5 text-xs font-bold uppercase tracking-wider text-white shadow-md shadow-red-600/30 ring-1 ring-red-500/50 transition hover:bg-red-700 hover:shadow-red-600/50 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-400 focus-visible:ring-offset-2"
         >
-          <span className="absolute inset-0 rounded-full bg-red-500/40 animate-ping" aria-hidden />
-          <span className="relative flex flex-col items-center leading-none">
-            <Siren className="h-4 w-4" />
-            <span className="mt-0.5">SOS</span>
+          <span className="relative flex h-2 w-2">
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-300 opacity-75" aria-hidden />
+            <span className="relative inline-flex h-2 w-2 rounded-full bg-red-200" aria-hidden />
           </span>
+          <AlertTriangle className="h-3.5 w-3.5" />
+          <span>SOS</span>
         </button>
         <NotificationBell />
         <div className="flex items-center gap-3 rounded-xl border border-border px-3 py-1.5 shadow-soft">
