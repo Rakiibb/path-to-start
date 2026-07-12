@@ -53,7 +53,11 @@ export const Route = createFileRoute("/_authenticated/student-management")({
 
 const createSchema = z.object({
   fullName: z.string().trim().min(1, "Required").max(120),
-  rollNumber: z.string().trim().min(1, "Required").max(40),
+  rollNumber: z
+    .string()
+    .trim()
+    .regex(/^\d+$/, "Roll number must contain digits only")
+    .max(40),
   password: z.string().min(6, "Min 6 characters").max(100),
   heightCm: z
     .string()
@@ -394,7 +398,7 @@ function AddDialog({
             <Input {...form.register("fullName")} />
           </Field>
           <Field label="Roll Number" error={form.formState.errors.rollNumber?.message}>
-            <Input {...form.register("rollNumber")} />
+            <Input inputMode="numeric" pattern="[0-9]*" placeholder="e.g. 101" {...form.register("rollNumber")} />
           </Field>
           <Field label="Default Password" error={form.formState.errors.password?.message}>
             <Input type="password" {...form.register("password")} />

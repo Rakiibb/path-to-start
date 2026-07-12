@@ -169,6 +169,9 @@ function SettingsPage() {
       const errors: string[] = [];
       for (const [i, r] of rows.entries()) {
         try {
+          if (!/^\d+$/.test((r.roll_number ?? "").trim())) {
+            throw new Error("roll_number must contain digits only");
+          }
           await adminCreateStudent({
             fullName: r.full_name,
             rollNumber: r.roll_number,
