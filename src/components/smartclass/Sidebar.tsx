@@ -7,7 +7,6 @@ import {
   MessageSquare,
   ShieldAlert,
   LayoutGrid,
-  FileBarChart,
   Siren,
   BookOpen,
   Bell,
