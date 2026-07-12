@@ -1,8 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
-import { GraduationCap } from "lucide-react";
-import { toast } from "sonner";
-import { signInWithCode } from "@/lib/auth";
+import { GraduationCap, School, UserRound } from "lucide-react";
+import { signInFixedAccount } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/login")({
@@ -11,21 +10,31 @@ export const Route = createFileRoute("/login")({
 
 function LoginPage() {
   const navigate = useNavigate();
-  const [rollNumber, setRollNumber] = useState("");
+  const [loginType, setLoginType] = useState<"student" | "teacher">("student");
+  const [id, setId] = useState("");
   const [password, setPassword] = useState("");
-  const [code, setCode] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  const demo = loginType === "teacher"
+    ? { id: "teacher", password: "1234", label: "Teacher" }
+    : { id: "student", password: "1234", label: "Student" };
+
+  function selectType(type: "student" | "teacher") {
+    setLoginType(type);
+    setId("");
+    setPassword("");
+    setError("");
+  }
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
-    if (!rollNumber.trim()) return setError("Please enter your Roll Number.");
+    if (!id.trim()) return setError("Please enter your ID.");
     if (!password) return setError("Please enter your Password.");
     setLoading(true);
     try {
-      const session = await signInWithCode(rollNumber, password, code);
-      if (session.firstLogin) toast.success("Secret Code created successfully.");
+      await signInFixedAccount(loginType, id, password);
       navigate({ to: "/" });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Sign-in failed");
@@ -46,36 +55,63 @@ function LoginPage() {
           </div>
           <h1 className="mt-4 text-2xl font-semibold text-gray-900">Welcome to SmartClass</h1>
           <p className="mt-1 text-sm text-gray-500">
-            Sign in with your Roll Number and Password. Secret Code only required on first login.
+            Choose Student or Teacher login, then enter the ID and password.
           </p>
         </div>
 
-        <form onSubmit={onSubmit} className="mt-8 space-y-4">
+        <div className="mt-8 grid grid-cols-2 gap-3 rounded-xl bg-gray-100 p-1.5">
+          <button
+            type="button"
+            onClick={() => selectType("student")}
+            className={`flex h-12 items-center justify-center gap-2 rounded-lg text-sm font-semibold transition ${
+              loginType === "student"
+                ? "bg-white text-sky-700 shadow-sm"
+                : "text-gray-500 hover:text-gray-800"
+            }`}
+          >
+            <UserRound className="h-4 w-4" />
+            Student Login
+          </button>
+          <button
+            type="button"
+            onClick={() => selectType("teacher")}
+            className={`flex h-12 items-center justify-center gap-2 rounded-lg text-sm font-semibold transition ${
+              loginType === "teacher"
+                ? "bg-white text-sky-700 shadow-sm"
+                : "text-gray-500 hover:text-gray-800"
+            }`}
+          >
+            <School className="h-4 w-4" />
+            Teacher Login
+          </button>
+        </div>
+
+        <form onSubmit={onSubmit} className="mt-6 space-y-4">
           <div>
-            <label htmlFor="roll" className="block text-sm font-medium text-gray-700">Roll Number</label>
-            <input id="roll" type="text" inputMode="numeric" pattern="[0-9]*" autoComplete="username" value={rollNumber}
-              onChange={(e) => { setRollNumber(e.target.value.replace(/\D/g, "")); setError(""); }}
-              placeholder="e.g. 21" className={input} />
+            <label htmlFor="id" className="block text-sm font-medium text-gray-700">ID</label>
+            <input
+              id="id"
+              type="text"
+              autoComplete="username"
+              value={id}
+              onChange={(e) => { setId(e.target.value); setError(""); }}
+              placeholder={`Enter ${demo.label.toLowerCase()} ID`}
+              className={input}
+            />
           </div>
 
           <div>
             <label htmlFor="password" className="block text-sm font-medium text-gray-700">Password</label>
-            <input id="password" type="password" autoComplete="current-password" value={password}
+            <input
+              id="password"
+              type="password"
+              autoComplete="current-password"
+              value={password}
               onChange={(e) => { setPassword(e.target.value); setError(""); }}
-              placeholder="Enter your password" className={input} />
-          </div>
-
-          <div>
-            <label htmlFor="code" className="block text-sm font-medium text-gray-700">
-              Secret Code <span className="text-gray-400">(first login only)</span>
-            </label>
-            <input id="code" type="text" autoComplete="off" value={code}
-              onChange={(e) => { setCode(e.target.value); setError(""); }}
-              placeholder="Leave blank if already set" className={input} />
-            <p className="mt-1 text-xs text-gray-400">
-              First-time users: pick a unique handle (4–20 chars, letters / numbers / _ / .).
-            </p>
-            {error && <p className="mt-2 text-xs text-red-600">{error}</p>}
+              placeholder="Enter password"
+              className={input}
+            />
+            {error && <p className="mt-2 text-xs font-medium text-red-600">{error}</p>}
           </div>
 
           <Button type="submit" disabled={loading}
@@ -83,7 +119,15 @@ function LoginPage() {
             {loading ? "Signing in…" : "Login"}
           </Button>
 
-          <p className="text-center text-xs text-gray-400">Your role is assigned automatically.</p>
+          <div className="rounded-xl border border-sky-100 bg-sky-50 p-4 text-sm text-gray-700">
+            <div className="font-semibold text-gray-900">{demo.label} login details</div>
+            <div className="mt-2 grid grid-cols-[88px_1fr] gap-y-1">
+              <span className="text-gray-500">ID</span>
+              <code className="font-mono font-semibold text-sky-700">{demo.id}</code>
+              <span className="text-gray-500">Password</span>
+              <code className="font-mono font-semibold text-sky-700">{demo.password}</code>
+            </div>
+          </div>
         </form>
       </div>
     </div>
