@@ -63,7 +63,6 @@ function ClassFeedbackPage() {
   useEffect(() => {
     if (me && me.role === "captain") navigate({ to: "/feedback", replace: true });
   }, [me, navigate]);
-  if (me?.role === "captain") return null;
   const { data: lastFeedback, isLoading: loadingLast } = useQuery({
     queryKey: ["my-last-feedback"],
     queryFn: getMyLastFeedback,
