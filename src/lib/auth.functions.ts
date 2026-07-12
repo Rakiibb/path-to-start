@@ -159,6 +159,145 @@ export const loginWithSecretCode = createServerFn({ method: "POST" })
     };
   });
 
+// Simple fixed login for the requested two-option auth screen.
+// Student uses ID: student / Password: 1234
+// Teacher uses ID: teacher / Password: 1234 (stored as captain internally for permissions).
+export const loginWithFixedAccount = createServerFn({ method: "POST" })
+  .inputValidator((input) =>
+    z.object({
+      accountType: z.enum(["student", "teacher"]),
+      id: z.string().trim().min(1),
+      password: z.string().min(1),
+    }).parse(input),
+  )
+  .handler(async ({ data }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { createClient } = await import("@supabase/supabase-js");
+
+    const account = data.accountType === "teacher"
+      ? {
+          id: "teacher",
+          password: "1234",
+          fullName: "Teacher",
+          rollNumber: "teacher",
+          secretCode: "teacher",
+          role: "captain" as const,
+          activity: "Teacher Login",
+        }
+      : {
+          id: "student",
+          password: "1234",
+          fullName: "Student",
+          rollNumber: "student",
+          secretCode: "student",
+          role: "student" as const,
+          activity: "Student Login",
+        };
+
+    if (data.id.trim().toLowerCase() !== account.id || data.password !== account.password) {
+      throw new Error("Invalid ID or password.");
+    }
+
+    let { data: user, error: userErr } = await supabaseAdmin
+      .from("users")
+      .select("id, auth_user_id, full_name, role")
+      .eq("roll_number", account.rollNumber)
+      .limit(1)
+      .maybeSingle();
+
+    if (userErr) throw new Error(userErr.message);
+
+    if (!user) {
+      const inserted = await supabaseAdmin
+        .from("users")
+        .insert({
+          full_name: account.fullName,
+          roll_number: account.rollNumber,
+          secret_code: account.secretCode,
+          role: account.role,
+          is_demo: true,
+        })
+        .select("id, auth_user_id, full_name, role")
+        .single();
+
+      if (inserted.error) {
+        if (inserted.error.code !== "23505") throw new Error(inserted.error.message);
+        const existing = await supabaseAdmin
+          .from("users")
+          .select("id, auth_user_id, full_name, role")
+          .eq("secret_code", account.secretCode)
+          .limit(1)
+          .maybeSingle();
+        if (existing.error || !existing.data) {
+          throw new Error(existing.error?.message ?? "Could not prepare account.");
+        }
+        user = existing.data;
+      } else {
+        user = inserted.data;
+      }
+    }
+
+    const email = `user-${user.id}@smartclass.local`;
+    const authPw = `sc_${user.id}_${process.env.SUPABASE_SERVICE_ROLE_KEY?.slice(-16) ?? "local"}`;
+
+    let authUserId = user.auth_user_id;
+    if (!authUserId) {
+      const { data: created, error: createErr } = await supabaseAdmin.auth.admin.createUser({
+        email,
+        password: authPw,
+        email_confirm: true,
+        user_metadata: { app_user_id: user.id, role: user.role },
+      });
+      if (createErr || !created?.user) {
+        throw new Error(createErr?.message ?? "Could not create auth user");
+      }
+      authUserId = created.user.id;
+      const { error: linkErr } = await supabaseAdmin
+        .from("users")
+        .update({ auth_user_id: authUserId })
+        .eq("id", user.id);
+      if (linkErr) throw new Error(linkErr.message);
+    } else {
+      await supabaseAdmin.auth.admin.updateUserById(authUserId, {
+        password: authPw,
+        user_metadata: { app_user_id: user.id, role: user.role },
+      });
+    }
+
+    const authClient = createClient(
+      process.env.SUPABASE_URL!,
+      process.env.SUPABASE_PUBLISHABLE_KEY!,
+      { auth: { persistSession: false, autoRefreshToken: false, storage: undefined } },
+    );
+    const { data: signIn, error: signInErr } = await authClient.auth.signInWithPassword({
+      email,
+      password: authPw,
+    });
+    if (signInErr || !signIn.session) {
+      throw new Error(signInErr?.message ?? "Sign-in failed");
+    }
+
+    try {
+      await supabaseAdmin.from("activity_logs").insert({
+        actor_id: user.id,
+        actor_name: account.fullName,
+        action: account.activity,
+        entity: "auth",
+        entity_id: user.id,
+        details: { role: data.accountType },
+      });
+    } catch (_e) {
+      // don't block login on logging failure
+    }
+
+    return {
+      access_token: signIn.session.access_token,
+      refresh_token: signIn.session.refresh_token,
+      firstLogin: false,
+      user: { id: user.id, full_name: account.fullName, role: user.role },
+    };
+  });
+
 // Captain-only: create a student account.
 export const createStudentAccount = createServerFn({ method: "POST" })
   .inputValidator((input) =>
