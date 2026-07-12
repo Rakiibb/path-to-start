@@ -14,7 +14,6 @@ import {
   GraduationCap,
   Users,
   ListChecks,
-  Settings as SettingsIcon,
   PanelLeftClose,
   PanelLeftOpen,
   Sparkles,
@@ -36,7 +35,6 @@ const items = [
 
 const extraItems = [
   { to: "/student-management", label: "Student Management", icon: Users },
-  { to: "/settings", label: "Settings", icon: SettingsIcon },
 ] as const;
 
 export function Sidebar() {
