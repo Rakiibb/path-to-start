@@ -1,4 +1,4 @@
-import { Search, LogOut } from "lucide-react";
+import { Search, LogOut, Siren } from "lucide-react";
 import { useNavigate, useRouterState } from "@tanstack/react-router";
 import { signOut, type Session } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
@@ -45,6 +45,16 @@ export function Navbar({ session }: { session: Session | null }) {
         </kbd>
       </div>
       <div className="ml-auto flex items-center gap-3">
+        <Button
+          variant="destructive"
+          size="sm"
+          className="gap-1.5 bg-red-600 hover:bg-red-700"
+          onClick={() => navigate({ to: "/sos" })}
+          aria-label="SOS"
+        >
+          <Siren className="h-4 w-4" />
+          SOS
+        </Button>
         <NotificationBell />
         <div className="flex items-center gap-3 rounded-xl border border-border px-3 py-1.5 shadow-soft">
           <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary">
