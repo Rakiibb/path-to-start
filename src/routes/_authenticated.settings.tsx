@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Download, Upload, DatabaseBackup, Save } from "lucide-react";
+import { Download, Upload, DatabaseBackup, Save, Sparkles, Trash2 } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/settings")({
   component: SettingsPage,
@@ -24,6 +24,7 @@ type Settings = {
   min_password_length: number;
   require_password_number: boolean;
   require_password_symbol: boolean;
+  demo_mode: boolean;
 };
 
 const BACKUP_TABLES = [
@@ -80,7 +81,7 @@ function SettingsPage() {
       const { data, error } = await supabase
         .from("app_settings")
         .select(
-          "school_name, class_name, sos_enabled, feedback_enabled, min_password_length, require_password_number, require_password_symbol",
+          "school_name, class_name, sos_enabled, feedback_enabled, min_password_length, require_password_number, require_password_symbol, demo_mode",
         )
         .eq("id", true)
         .single();
@@ -139,6 +140,20 @@ function SettingsPage() {
 
   const backup = useMutation({
     mutationFn: exportDatabase,
+  });
+
+  const demo = useMutation({
+    mutationFn: async (enable: boolean) => {
+      const fn = enable ? "enable_demo_mode" : "disable_demo_mode";
+      // rpc name not in generated types
+      const { error } = await (supabase.rpc as unknown as (n: string) => Promise<{ error: { message: string } | null }>)(fn);
+      if (error) throw new Error(error.message);
+    },
+    onSuccess: (_d, enable) => {
+      toast.success(enable ? "Demo data loaded" : "Demo data removed");
+      qc.invalidateQueries();
+    },
+    onError: (e: Error) => toast.error(e.message),
   });
 
   const importCsv = useMutation({
@@ -349,6 +364,42 @@ function SettingsPage() {
                   {t}
                 </Button>
               ))}
+            </div>
+          </Section>
+
+          <Section
+            title="Demo Mode"
+            description="Populate the app with realistic sample data for hackathon demos. Real data is never touched."
+          >
+            <div className="flex items-start justify-between gap-4 rounded-lg border border-amber-200 bg-amber-50 p-4">
+              <div>
+                <div className="flex items-center gap-2 text-sm font-medium text-gray-900">
+                  <Sparkles className="h-4 w-4 text-amber-600" />
+                  {form.demo_mode ? "Demo Mode is ON" : "Demo Mode is OFF"}
+                </div>
+                <div className="mt-1 text-xs text-gray-600">
+                  Enables 30 students, 3 captains, 50 feedback (verified / pending / rejected),
+                  random votes, 10 SOS history, 20 notifications and 25 school rules.
+                </div>
+              </div>
+              {form.demo_mode ? (
+                <Button
+                  variant="outline"
+                  onClick={() => demo.mutate(false)}
+                  disabled={demo.isPending}
+                >
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  {demo.isPending ? "Removing…" : "Disable"}
+                </Button>
+              ) : (
+                <Button
+                  onClick={() => demo.mutate(true)}
+                  disabled={demo.isPending}
+                >
+                  <Sparkles className="mr-2 h-4 w-4" />
+                  {demo.isPending ? "Seeding…" : "Enable"}
+                </Button>
+              )}
             </div>
           </Section>
         </div>

@@ -58,6 +58,7 @@ export type Database = {
       app_settings: {
         Row: {
           class_name: string
+          demo_mode: boolean
           feedback_enabled: boolean
           id: boolean
           min_password_length: number
@@ -69,6 +70,7 @@ export type Database = {
         }
         Insert: {
           class_name?: string
+          demo_mode?: boolean
           feedback_enabled?: boolean
           id?: boolean
           min_password_length?: number
@@ -80,6 +82,7 @@ export type Database = {
         }
         Update: {
           class_name?: string
+          demo_mode?: boolean
           feedback_enabled?: boolean
           id?: boolean
           min_password_length?: number
@@ -179,6 +182,7 @@ export type Database = {
           category: string
           created_at: string
           id: string
+          is_demo: boolean
           is_read: boolean
           message: string | null
           title: string
@@ -188,6 +192,7 @@ export type Database = {
           category?: string
           created_at?: string
           id?: string
+          is_demo?: boolean
           is_read?: boolean
           message?: string | null
           title: string
@@ -197,6 +202,7 @@ export type Database = {
           category?: string
           created_at?: string
           id?: string
+          is_demo?: boolean
           is_read?: boolean
           message?: string | null
           title?: string
@@ -218,6 +224,7 @@ export type Database = {
           created_at: string
           description: string | null
           id: string
+          is_demo: boolean
           keywords: string[] | null
           rule_number: number | null
           title: string
@@ -228,6 +235,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           id?: string
+          is_demo?: boolean
           keywords?: string[] | null
           rule_number?: number | null
           title: string
@@ -238,6 +246,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           id?: string
+          is_demo?: boolean
           keywords?: string[] | null
           rule_number?: number | null
           title?: string
@@ -322,6 +331,7 @@ export type Database = {
           full_name: string
           height_cm: number | null
           id: string
+          is_demo: boolean
           password_hash: string | null
           role: Database["public"]["Enums"]["app_role"]
           roll_number: string | null
@@ -334,6 +344,7 @@ export type Database = {
           full_name: string
           height_cm?: number | null
           id?: string
+          is_demo?: boolean
           password_hash?: string | null
           role?: Database["public"]["Enums"]["app_role"]
           roll_number?: string | null
@@ -346,6 +357,7 @@ export type Database = {
           full_name?: string
           height_cm?: number | null
           id?: string
+          is_demo?: boolean
           password_hash?: string | null
           role?: Database["public"]["Enums"]["app_role"]
           roll_number?: string | null
@@ -360,6 +372,8 @@ export type Database = {
     }
     Functions: {
       current_app_user_id: { Args: never; Returns: string }
+      disable_demo_mode: { Args: never; Returns: undefined }
+      enable_demo_mode: { Args: never; Returns: undefined }
       get_user_identities: {
         Args: { _ids: string[] }
         Returns: {
