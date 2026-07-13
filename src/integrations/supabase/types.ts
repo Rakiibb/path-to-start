@@ -384,6 +384,13 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      captain_complaint_counts: {
+        Args: never
+        Returns: {
+          captain_id: string
+          complaint_count: number
+        }[]
+      }
       current_app_user_id: { Args: never; Returns: string }
       disable_demo_mode: { Args: never; Returns: undefined }
       enable_demo_mode: { Args: never; Returns: undefined }
