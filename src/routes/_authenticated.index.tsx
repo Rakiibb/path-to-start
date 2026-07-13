@@ -139,7 +139,7 @@ function DashboardView() {
                 {activeSos.map((s) => (
                   <div
                     key={s.id}
-                    className="flex items-center justify-between rounded-lg border border-red-200 bg-red-50 p-4"
+                    className="flex items-center justify-between rounded-lg border border-red-500/30 bg-red-500/10 p-4"
                   >
                     <div className="min-w-0">
                       <div className="flex items-center gap-2">
@@ -147,19 +147,19 @@ function DashboardView() {
                           {s.status}
                         </span>
                         {s.location && (
-                          <span className="flex items-center gap-1 text-xs text-gray-600">
+                          <span className="flex items-center gap-1 text-xs text-muted-foreground">
                             <MapPin size={12} /> {s.location}
                           </span>
                         )}
                       </div>
                       {s.message && (
-                        <p className="mt-1 line-clamp-1 text-sm text-gray-700">{s.message}</p>
+                        <p className="mt-1 line-clamp-1 text-sm text-foreground/80">{s.message}</p>
                       )}
-                      <p className="mt-1 text-xs text-gray-500">{timeAgo(s.created_at)}</p>
+                      <p className="mt-1 text-xs text-muted-foreground">{timeAgo(s.created_at)}</p>
                     </div>
                     <Link
                       to="/sos"
-                      className="shrink-0 rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50"
+                      className="shrink-0 rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-medium text-foreground hover:bg-accent"
                     >
                       View Details
                     </Link>
@@ -178,7 +178,7 @@ function DashboardView() {
                 <Link
                   key={to}
                   to={to}
-                  className="flex items-center gap-3 rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm font-medium text-gray-700 hover:border-sky-300 hover:bg-sky-50 hover:text-sky-700"
+                  className="flex items-center gap-3 rounded-lg border border-border bg-card px-3 py-2.5 text-sm font-medium text-foreground hover:border-primary/40 hover:bg-primary/10 hover:text-primary"
                 >
                   <Icon size={16} />
                   {label}
@@ -201,19 +201,19 @@ function DashboardView() {
                 {notifications.map((n) => (
                   <li key={n.id} className="flex gap-3">
                     <div className="relative mt-1">
-                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-sky-50 text-sky-600">
+                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/15 text-primary">
                         <Bell size={14} />
                       </div>
                       {!n.is_read && (
-                        <span className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full border-2 border-white bg-sky-500" />
+                        <span className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full border-2 border-card bg-primary" />
                       )}
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-medium text-gray-900">{n.title}</p>
+                      <p className="truncate text-sm font-medium text-foreground">{n.title}</p>
                       {n.message && (
-                        <p className="line-clamp-1 text-xs text-gray-500">{n.message}</p>
+                        <p className="line-clamp-1 text-xs text-muted-foreground">{n.message}</p>
                       )}
-                      <p className="mt-0.5 text-xs text-gray-400">{timeAgo(n.created_at)}</p>
+                      <p className="mt-0.5 text-xs text-muted-foreground">{timeAgo(n.created_at)}</p>
                     </div>
                   </li>
                 ))}
