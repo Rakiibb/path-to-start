@@ -181,7 +181,7 @@ export const loginWithFixedAccount = createServerFn({ method: "POST" })
           fullName: "Teacher",
           rollNumber: "fixed_teacher",
           secretCode: "fixed_teacher",
-          role: "captain" as const,
+          role: "student" as const,
           activity: "Teacher Login",
         }
       : {
