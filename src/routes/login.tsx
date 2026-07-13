@@ -52,11 +52,11 @@ function LoginPage() {
         {/* Left: brand + illustration */}
         <section className="hidden overflow-hidden rounded-3xl bg-[#eaf0fb] p-10 lg:flex lg:flex-col">
           <span className="mx-auto inline-flex items-center rounded-full bg-white/70 px-4 py-1.5 text-[11px] font-bold uppercase tracking-[0.18em] text-blue-700 ring-1 ring-blue-200">
-            Digital Classroom
+            WELCOME TO
           </span>
           <div className="mx-auto mt-8 max-w-lg text-center">
             <h1 className="text-4xl font-extrabold leading-tight tracking-tight text-blue-800 md:text-5xl">
-              Empowering Modern <br /> Learning
+              SMART CLASSROOOM
             </h1>
             <p className="mt-5 text-[15px] leading-relaxed text-slate-600">
               A transparent, safe, and smart workspace for educators and students to excel together.
