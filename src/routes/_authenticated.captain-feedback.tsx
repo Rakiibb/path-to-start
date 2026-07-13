@@ -122,15 +122,12 @@ function StudentView({ captains, meId }: { captains: Captain[]; meId: string | n
   const countsQ = useQuery({
     queryKey: ["cf-captain-counts"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("feedback")
-        .select("target_captain_id")
-        .eq("feedback_type", "Captain");
+      const { data, error } = await supabase.rpc("captain_complaint_counts");
       if (error) throw error;
       const map = new Map<string, number>();
       (data ?? []).forEach((r: any) => {
-        if (!r.target_captain_id) return;
-        map.set(r.target_captain_id, (map.get(r.target_captain_id) ?? 0) + 1);
+        if (!r.captain_id) return;
+        map.set(r.captain_id, Number(r.complaint_count ?? 0));
       });
       return map;
     },
