@@ -460,11 +460,7 @@ function CaptainFeedbackPage() {
         </form>
       </section>
 
-      {/* All feedback */}
-      <section className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
-
       {/* Corruption tracker — driven by Tiffin Tax complaints */}
-      </section>
       <section className="rounded-2xl border border-amber-200 bg-gradient-to-br from-amber-50 to-white p-6 shadow-sm">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-3">
