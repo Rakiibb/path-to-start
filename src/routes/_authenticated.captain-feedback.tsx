@@ -404,9 +404,14 @@ function StudentView({ captains, meId }: { captains: Captain[]; meId: string | n
                 <div key={r.id} className="rounded-xl border border-white/10 bg-slate-900/40 p-4">
                   <div className="flex items-center justify-between gap-2">
                     <div className="text-sm font-semibold text-slate-100">{r.category ?? r.title}</div>
-                    <span className={cn("inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-medium", STATUS_STYLE[r.status].cls)}>
-                      {STATUS_STYLE[r.status].icon}{STATUS_STYLE[r.status].label}
-                    </span>
+                    {(() => {
+                      const s = r.status === "Pending" ? "Verified" : r.status;
+                      return (
+                        <span className={cn("inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-medium", STATUS_STYLE[s].cls)}>
+                          {STATUS_STYLE[s].icon}{s === "Verified" ? "Verified" : STATUS_STYLE[s].label}
+                        </span>
+                      );
+                    })()}
                   </div>
                   <p className="mt-2 whitespace-pre-wrap text-sm text-slate-300">
                     {r.description || "—"}
