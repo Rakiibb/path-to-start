@@ -1,4 +1,5 @@
 import { createFileRoute, Outlet, useNavigate } from "@tanstack/react-router";
+import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { getCurrentAppUser, type Session } from "@/lib/auth";
 import { Sidebar } from "@/components/smartclass/Sidebar";
@@ -10,6 +11,7 @@ export const Route = createFileRoute("/_authenticated")({
 
 function AuthenticatedLayout() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [session, setSession] = useState<Session | null>(null);
   const [checked, setChecked] = useState(false);
 
@@ -18,16 +20,18 @@ function AuthenticatedLayout() {
     getCurrentAppUser().then((s) => {
       if (cancelled) return;
       if (!s) {
+        queryClient.removeQueries({ queryKey: ["me"] });
         navigate({ to: "/login", replace: true });
         return;
       }
       setSession(s);
+      queryClient.setQueryData(["me"], s);
       setChecked(true);
     });
     return () => {
       cancelled = true;
     };
-  }, [navigate]);
+  }, [navigate, queryClient]);
 
   if (!checked) {
     return <div className="flex min-h-screen items-center justify-center bg-white text-sm text-gray-500">Loading…</div>;
