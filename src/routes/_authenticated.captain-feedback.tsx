@@ -15,7 +15,7 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   ShieldAlert, ShieldCheck, Eye, Search, Loader2, Send, Eraser,
   AlertTriangle, CheckCircle2, Clock, FileText, Filter, Inbox,
-  UserCog, TrendingUp, X, ChevronLeft, ChevronRight,
+  UserCog, TrendingUp, X, ChevronLeft, ChevronRight, UserCircle2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
