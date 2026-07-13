@@ -236,10 +236,41 @@ function renderAllFeedback() {
 }
 document.getElementById("fb-search").addEventListener("input", renderAllFeedback);
 
+function renderCorruption() {
+  const rate = 2;
+  const rows = DB.feedback.filter(f => f.category === "Tiffin Tax");
+  document.getElementById("corr-total").textContent = "৳" + (rows.length * rate);
+  document.getElementById("corr-count").textContent = rows.length;
+  const byDay = {};
+  rows.forEach(r => {
+    const d = new Date(r.createdAt); if (isNaN(d)) return;
+    const k = d.toISOString().slice(0,10);
+    byDay[k] = (byDay[k] || 0) + rate;
+  });
+  const days = Object.keys(byDay).sort();
+  const chart = document.getElementById("corr-chart");
+  if (days.length === 0) {
+    chart.innerHTML = '<p class="text-muted text-sm" style="margin:auto;">No Tiffin Tax complaints yet.</p>';
+    return;
+  }
+  const max = Math.max(...days.map(k => byDay[k]));
+  chart.innerHTML = days.map(k => {
+    const v = byDay[k];
+    const h = Math.max(6, Math.round((v / max) * 130));
+    const label = k.slice(5);
+    return `<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;min-width:32px;">
+      <div style="font-size:11px;color:#b45309;font-weight:600;">৳${v}</div>
+      <div style="width:100%;height:${h}px;background:#f59e0b;border-radius:6px 6px 0 0;"></div>
+      <div style="font-size:10px;color:#6b7280;">${label}</div>
+    </div>`;
+  }).join("");
+}
+
 // Re-render the list whenever new feedback is submitted.
 const _origRender = render;
-render = function () { _origRender(); renderAllFeedback(); };
+render = function () { _origRender(); renderAllFeedback(); renderCorruption(); };
 renderAllFeedback();
+renderCorruption();
 </script>
 </body>
 </html>
