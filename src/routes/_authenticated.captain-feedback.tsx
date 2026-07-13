@@ -330,6 +330,35 @@ function StudentView({ captains, meId }: { captains: Captain[]; meId: string | n
                   </div>
                   <FileText className="h-5 w-5 text-slate-500" />
                 </div>
+                {/* Capacity meter: max 3 complaints */}
+                <div className="mt-4">
+                  <div className="flex items-center justify-between text-[11px] text-slate-400">
+                    <span>Capacity</span>
+                    <span className={cn("font-semibold tabular-nums", tone.text)}>
+                      {Math.min(count, 3)} / 3
+                    </span>
+                  </div>
+                  <div className="mt-1.5 flex gap-1.5">
+                    {[0, 1, 2].map((i) => (
+                      <div
+                        key={i}
+                        className={cn(
+                          "h-2 flex-1 rounded-full ring-1 transition-colors",
+                          i < Math.min(count, 3)
+                            ? cn(
+                                count >= 3 ? "bg-rose-500 ring-rose-500/40"
+                                : count === 2 ? "bg-amber-500 ring-amber-500/40"
+                                : "bg-yellow-500 ring-yellow-500/40",
+                              )
+                            : "bg-white/5 ring-white/10",
+                        )}
+                      />
+                    ))}
+                  </div>
+                  <div className={cn("mt-1.5 text-[10px] uppercase tracking-wide", tone.text)}>
+                    {count >= 3 ? "Limit reached" : count === 2 ? "1 slot left" : `${3 - count} slots left`}
+                  </div>
+                </div>
               </div>
             );
           })}
