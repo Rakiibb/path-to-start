@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { getCurrentAppUser } from "@/lib/auth";
 import {
   LayoutDashboard,
-  ShieldAlert,
   LayoutGrid,
   Siren,
   BookOpen,
