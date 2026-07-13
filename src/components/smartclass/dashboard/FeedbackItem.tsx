@@ -45,8 +45,14 @@ export function FeedbackItem({
 
   const voteMut = useMutation({
     mutationFn: (vote: boolean) => castVote(feedback.id, vote),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["dashboard"] }),
-    onError: (e: any) => toast.error(e?.message ?? "Failed to vote"),
+    onSuccess: (_data, vote) => {
+      qc.invalidateQueries({ queryKey: ["dashboard"] });
+      toast.success(vote ? "Voted Yes" : "Voted No");
+    },
+    onError: (e: any) => {
+      console.error("castVote failed", e);
+      toast.error(e?.message ?? "Failed to vote");
+    },
   });
 
   return (
