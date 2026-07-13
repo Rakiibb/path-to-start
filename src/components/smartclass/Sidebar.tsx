@@ -21,7 +21,6 @@ import { cn } from "@/lib/utils";
 
 const items = [
   { to: "/", label: "Dashboard", icon: LayoutDashboard },
-  { to: "/captain-feedback", label: "Captain Feedback", icon: ShieldAlert },
   { to: "/captain-feedback", hash: "corruption-money", label: "Corruption Money", icon: Coins },
   { to: "/seat-planner", label: "Seat Planner", icon: LayoutGrid },
   { to: "/sos", label: "SOS", icon: Siren },
