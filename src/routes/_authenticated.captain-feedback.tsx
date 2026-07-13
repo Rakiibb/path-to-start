@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ReactElement } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -46,7 +46,7 @@ const MAX_DESC = 800;
    Pending  => under review. */
 type ReportStatus = "Pending" | "Verified" | "Rejected";
 
-const STATUS_STYLE: Record<ReportStatus, { label: string; cls: string; icon: JSX.Element }> = {
+const STATUS_STYLE: Record<ReportStatus, { label: string; cls: string; icon: ReactElement }> = {
   Pending:  { label: "Pending",  cls: "bg-amber-500/10 text-amber-300 border-amber-500/20", icon: <Clock className="h-3 w-3" /> },
   Verified: { label: "Warned",   cls: "bg-rose-500/10 text-rose-300 border-rose-500/20",   icon: <ShieldAlert className="h-3 w-3" /> },
   Rejected: { label: "Resolved", cls: "bg-emerald-500/10 text-emerald-300 border-emerald-500/20", icon: <CheckCircle2 className="h-3 w-3" /> },
@@ -285,7 +285,7 @@ function StudentView({ captains, meId }: { captains: Captain[]; meId: string | n
 
 function StatTile({
   label, value, icon, tone,
-}: { label: string; value: number | string; icon: JSX.Element; tone: string }) {
+}: { label: string; value: number | string; icon: ReactElement; tone: string }) {
   return (
     <div className="rounded-2xl border border-white/10 bg-slate-900/40 p-5 shadow-lg backdrop-blur">
       <div className="flex items-center justify-between">
