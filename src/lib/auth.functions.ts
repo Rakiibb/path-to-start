@@ -181,7 +181,7 @@ export const loginWithFixedAccount = createServerFn({ method: "POST" })
           fullName: "Teacher",
           rollNumber: "fixed_teacher",
           secretCode: "fixed_teacher",
-          role: "captain" as const,
+          role: "student" as const,
           activity: "Teacher Login",
         }
       : {
@@ -283,6 +283,14 @@ export const loginWithFixedAccount = createServerFn({ method: "POST" })
     }
 
     const user = fixedUser;
+    // Ensure the fixed account never carries elevated privileges.
+    if (user.role !== account.role) {
+      await supabaseAdmin
+        .from("users")
+        .update({ role: account.role })
+        .eq("id", user.id);
+      user.role = account.role;
+    }
     const email = `user-${user.id}@smartclass.local`;
     const authPw = `sc_${user.id}_${process.env.SUPABASE_SERVICE_ROLE_KEY?.slice(-16) ?? "local"}`;
 
