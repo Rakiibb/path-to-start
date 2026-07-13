@@ -15,7 +15,7 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   ShieldAlert, ShieldCheck, Eye, Search, Loader2, Send, Eraser,
   AlertTriangle, CheckCircle2, Clock, FileText, Filter, Inbox,
-  UserCog, TrendingUp, X, ChevronLeft, ChevronRight,
+  UserCog, TrendingUp, X, ChevronLeft, ChevronRight, UserCircle2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -119,6 +119,22 @@ const schema = z.object({
 type FormValues = z.infer<typeof schema>;
 
 function StudentView({ captains, meId }: { captains: Captain[]; meId: string | null }) {
+  const countsQ = useQuery({
+    queryKey: ["cf-captain-counts"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("feedback")
+        .select("target_captain_id")
+        .eq("feedback_type", "Captain");
+      if (error) throw error;
+      const map = new Map<string, number>();
+      (data ?? []).forEach((r: any) => {
+        if (!r.target_captain_id) return;
+        map.set(r.target_captain_id, (map.get(r.target_captain_id) ?? 0) + 1);
+      });
+      return map;
+    },
+  });
   const [lastId, setLastId] = useState<string | null>(null);
   const {
     register, handleSubmit, watch, reset, formState: { errors, isSubmitting },
@@ -148,7 +164,8 @@ function StudentView({ captains, meId }: { captains: Captain[]; meId: string | n
   };
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
+    <div className="space-y-8">
+      <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
       {/* Form card */}
       <section className="rounded-2xl border border-white/10 bg-slate-900/40 p-6 shadow-2xl backdrop-blur">
         <div className="mb-5 flex items-center gap-3">
@@ -273,6 +290,51 @@ function StudentView({ captains, meId }: { captains: Captain[]; meId: string | n
           ))}
         </ul>
       </aside>
+      </div>
+
+      {/* Complaint counts per captain */}
+      <section className="rounded-2xl border border-white/10 bg-slate-900/40 p-6 shadow-2xl backdrop-blur">
+        <div className="mb-5 flex items-center gap-3">
+          <div className="grid h-10 w-10 place-items-center rounded-xl bg-rose-500/15 text-rose-300 ring-1 ring-rose-500/30">
+            <TrendingUp className="h-5 w-5" />
+          </div>
+          <div>
+            <h2 className="text-base font-semibold text-slate-100">Complaints by Captain</h2>
+            <p className="text-xs text-slate-400">Total complaints submitted against each captain.</p>
+          </div>
+        </div>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {captains.map((c) => {
+            const count = countsQ.data?.get(c.id) ?? 0;
+            const tone =
+              count >= 5 ? { ring: "ring-rose-500/40", text: "text-rose-300", bg: "bg-rose-500/10" }
+              : count >= 2 ? { ring: "ring-amber-500/40", text: "text-amber-300", bg: "bg-amber-500/10" }
+              : { ring: "ring-emerald-500/30", text: "text-emerald-300", bg: "bg-emerald-500/10" };
+            return (
+              <div key={c.id} className={cn("rounded-2xl border border-white/10 bg-slate-950/40 p-5 ring-1", tone.ring)}>
+                <div className="flex items-center gap-3">
+                  <div className={cn("grid h-11 w-11 place-items-center rounded-xl ring-1", tone.bg, tone.ring, tone.text)}>
+                    <UserCircle2 className="h-6 w-6" />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="truncate text-sm font-semibold text-slate-100">{c.full_name}</div>
+                    <div className="text-[11px] uppercase tracking-wide text-slate-400">Captain</div>
+                  </div>
+                </div>
+                <div className="mt-4 flex items-end justify-between">
+                  <div>
+                    <div className={cn("text-3xl font-bold tabular-nums", tone.text)}>
+                      {countsQ.isLoading ? "…" : count}
+                    </div>
+                    <div className="text-xs text-slate-400">Total complaints</div>
+                  </div>
+                  <FileText className="h-5 w-5 text-slate-500" />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </section>
     </div>
   );
 }
