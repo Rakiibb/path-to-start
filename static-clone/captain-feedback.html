@@ -63,7 +63,7 @@
               <select class="select" name="category">
                 <option value="">—</option>
                 <option>Academic</option><option>Behavior</option><option>Leadership</option>
-                <option>Fund Issue</option><option>Communication</option><option>Other</option>
+                <option>Fund Issue</option><option>Communication</option><option>Tiffin Tax</option><option>Other</option>
               </select>
             </div>
           </div>
@@ -77,6 +77,20 @@
           </div>
           <button type="submit" class="btn">Submit Feedback</button>
         </form>
+      </div>
+
+      <div class="card mt-4" style="border-left:4px solid var(--amber,#f59e0b);">
+        <div class="row between mb-4" style="align-items:flex-start;gap:16px;flex-wrap:wrap;">
+          <div>
+            <h3 style="margin:0;">💰 Corruption Money Tracker</h3>
+            <p class="text-xs text-muted" style="margin:2px 0 0;">Each <b>Tiffin Tax</b> complaint adds ৳2 to the corruption tally.</p>
+          </div>
+          <div class="row" style="gap:24px;">
+            <div><div style="font-size:26px;font-weight:700;color:#b45309;" id="corr-total">৳0</div><div class="text-xs text-muted">Total corruption</div></div>
+            <div><div style="font-size:22px;font-weight:600;" id="corr-count">0</div><div class="text-xs text-muted">Complaints</div></div>
+          </div>
+        </div>
+        <div id="corr-chart" style="display:flex;align-items:flex-end;gap:10px;height:160px;padding:8px 4px;border-top:1px dashed var(--border);"></div>
       </div>
 
       <div class="card mt-4">
