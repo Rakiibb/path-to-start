@@ -405,6 +405,17 @@ export type Database = {
         Args: { _role: Database["public"]["Enums"]["app_role"] }
         Returns: boolean
       }
+      list_captain_complaints: {
+        Args: { _captain_id: string }
+        Returns: {
+          category: string
+          created_at: string
+          description: string
+          id: string
+          status: Database["public"]["Enums"]["feedback_status"]
+          title: string
+        }[]
+      }
       list_captains_safe: {
         Args: never
         Returns: {
