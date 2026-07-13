@@ -41,6 +41,7 @@ export function FeedbackItem({
   const meId = meQ.data?.id ?? null;
   const isAuthor = meId != null && meId === feedback.created_by;
   const myVote = meId ? votes.find((v) => v.user_id === meId)?.vote ?? null : null;
+  const votingClosed = feedback.status !== "Pending";
 
   const voteMut = useMutation({
     mutationFn: (vote: boolean) => castVote(feedback.id, vote),
@@ -79,7 +80,7 @@ export function FeedbackItem({
       <div className="mt-3 flex items-center gap-2 border-t border-border pt-3">
         <button
           type="button"
-          disabled={isAuthor || voteMut.isPending}
+          disabled={isAuthor || votingClosed || voteMut.isPending}
           onClick={() => voteMut.mutate(true)}
           className={cn(
             "inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-xs font-medium transition disabled:cursor-not-allowed disabled:opacity-50",
@@ -97,7 +98,7 @@ export function FeedbackItem({
         </button>
         <button
           type="button"
-          disabled={isAuthor || voteMut.isPending}
+          disabled={isAuthor || votingClosed || voteMut.isPending}
           onClick={() => voteMut.mutate(false)}
           className={cn(
             "inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-xs font-medium transition disabled:cursor-not-allowed disabled:opacity-50",
@@ -113,7 +114,9 @@ export function FeedbackItem({
           )}
           No
         </button>
-        {isAuthor && (
+        {votingClosed ? (
+          <span className="ml-auto text-[11px] text-muted-foreground">Voting closed · {feedback.status}</span>
+        ) : isAuthor && (
           <span className="ml-auto text-[11px] text-muted-foreground">You submitted this</span>
         )}
       </div>
