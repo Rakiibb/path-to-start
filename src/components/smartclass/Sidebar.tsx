@@ -15,12 +15,14 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   Sparkles,
+  Coins,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const items = [
   { to: "/", label: "Dashboard", icon: LayoutDashboard },
   { to: "/captain-feedback", label: "Captain Feedback", icon: ShieldAlert },
+  { to: "/captain-feedback", hash: "corruption-money", label: "Corruption Money", icon: Coins },
   { to: "/seat-planner", label: "Seat Planner", icon: LayoutGrid },
   { to: "/sos", label: "SOS", icon: Siren },
   { to: "/school-rules", label: "School Rules", icon: BookOpen },
@@ -34,7 +36,9 @@ const extraItems = [
 ] as const;
 
 export function Sidebar() {
-  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const location = useRouterState({ select: (s) => s.location });
+  const pathname = location.pathname;
+  const currentHash = location.hash ?? "";
   const { data: session } = useQuery({
     queryKey: ["me"],
     queryFn: getCurrentAppUser,
@@ -88,12 +92,15 @@ export function Sidebar() {
         </button>
       )}
       <nav className="flex-1 space-y-0.5 p-3">
-        {allItems.map(({ to, label, icon: Icon }) => {
-          const active = pathname === to;
+        {allItems.map((item) => {
+          const { to, label, icon: Icon } = item;
+          const hash = "hash" in item ? item.hash : undefined;
+          const active = pathname === to && (hash ? currentHash === hash : !currentHash);
           return (
             <Link
-              key={to}
+              key={`${to}-${hash ?? "page"}`}
               to={to}
+              hash={hash}
               title={collapsed ? label : undefined}
               className={cn(
                 "group relative flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium",

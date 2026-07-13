@@ -461,7 +461,7 @@ function CaptainFeedbackPage() {
       </section>
 
       {/* Corruption tracker — driven by Tiffin Tax complaints */}
-      <section className="rounded-2xl border border-amber-200 bg-gradient-to-br from-amber-50 to-white p-6 shadow-sm">
+      <section id="corruption-money" className="scroll-mt-24 rounded-2xl border border-amber-200 bg-gradient-to-br from-amber-50 to-white p-6 shadow-sm">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-amber-500/15 text-amber-700">
