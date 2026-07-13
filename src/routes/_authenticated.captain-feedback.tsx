@@ -132,6 +132,16 @@ function StudentView({ captains, meId }: { captains: Captain[]; meId: string | n
       return map;
     },
   });
+  const [detailFor, setDetailFor] = useState<Captain | null>(null);
+  const detailsQ = useQuery({
+    queryKey: ["cf-captain-complaints", detailFor?.id],
+    enabled: !!detailFor,
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("list_captain_complaints", { _captain_id: detailFor!.id });
+      if (error) throw error;
+      return (data ?? []) as { id: string; title: string; description: string | null; category: string | null; status: ReportStatus; created_at: string }[];
+    },
+  });
   const [lastId, setLastId] = useState<string | null>(null);
   const {
     register, handleSubmit, watch, reset, formState: { errors, isSubmitting },
@@ -308,7 +318,15 @@ function StudentView({ captains, meId }: { captains: Captain[]; meId: string | n
               : count >= 2 ? { ring: "ring-amber-500/40", text: "text-amber-300", bg: "bg-amber-500/10" }
               : { ring: "ring-emerald-500/30", text: "text-emerald-300", bg: "bg-emerald-500/10" };
             return (
-              <div key={c.id} className={cn("rounded-2xl border border-white/10 bg-slate-950/40 p-5 ring-1", tone.ring)}>
+              <button
+                key={c.id}
+                type="button"
+                onClick={() => setDetailFor(c)}
+                className={cn(
+                  "group text-left rounded-2xl border border-white/10 bg-slate-950/40 p-5 ring-1 transition hover:border-white/20 hover:bg-slate-900/60 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400/60",
+                  tone.ring,
+                )}
+              >
                 <div className="flex items-center gap-3">
                   <div className={cn("grid h-11 w-11 place-items-center rounded-xl ring-1", tone.bg, tone.ring, tone.text)}>
                     <UserCircle2 className="h-6 w-6" />
@@ -317,6 +335,7 @@ function StudentView({ captains, meId }: { captains: Captain[]; meId: string | n
                     <div className="truncate text-sm font-semibold text-slate-100">{c.full_name}</div>
                     <div className="text-[11px] uppercase tracking-wide text-slate-400">Captain</div>
                   </div>
+                  <Eye className="ml-auto h-4 w-4 text-slate-500 opacity-0 transition group-hover:opacity-100" />
                 </div>
                 <div className="mt-4 flex items-end justify-between">
                   <div>
@@ -356,11 +375,51 @@ function StudentView({ captains, meId }: { captains: Captain[]; meId: string | n
                     {count >= 3 ? "Limit reached" : count === 2 ? "1 slot left" : `${3 - count} slots left`}
                   </div>
                 </div>
-              </div>
+              </button>
             );
           })}
         </div>
       </section>
+
+      {/* Complaint details dialog */}
+      <Dialog open={!!detailFor} onOpenChange={(o) => !o && setDetailFor(null)}>
+        <DialogContent className="max-w-2xl border-white/10 bg-slate-950 text-slate-100">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-slate-100">
+              <UserCircle2 className="h-5 w-5 text-indigo-300" />
+              Complaints against {detailFor?.full_name}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="max-h-[65vh] space-y-3 overflow-y-auto pr-1">
+            {detailsQ.isLoading ? (
+              <div className="flex items-center gap-2 text-sm text-slate-400">
+                <Loader2 className="h-4 w-4 animate-spin" /> Loading complaints…
+              </div>
+            ) : (detailsQ.data?.length ?? 0) === 0 ? (
+              <div className="rounded-xl border border-white/10 bg-slate-900/40 p-6 text-center text-sm text-slate-400">
+                No complaints filed against this captain.
+              </div>
+            ) : (
+              detailsQ.data!.map((r) => (
+                <div key={r.id} className="rounded-xl border border-white/10 bg-slate-900/40 p-4">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="text-sm font-semibold text-slate-100">{r.category ?? r.title}</div>
+                    <span className={cn("inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-medium", STATUS_STYLE[r.status].cls)}>
+                      {STATUS_STYLE[r.status].icon}{STATUS_STYLE[r.status].label}
+                    </span>
+                  </div>
+                  <p className="mt-2 whitespace-pre-wrap text-sm text-slate-300">
+                    {r.description || "—"}
+                  </p>
+                  <div className="mt-2 text-[11px] text-slate-500">
+                    {fmtDateTime(r.created_at)} · <span className="font-mono">{shortId(r.id)}</span>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
