@@ -462,6 +462,59 @@ function CaptainFeedbackPage() {
 
       {/* All feedback */}
       <section className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+
+      {/* Corruption tracker — driven by Tiffin Tax complaints */}
+      </section>
+      <section className="rounded-2xl border border-amber-200 bg-gradient-to-br from-amber-50 to-white p-6 shadow-sm">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-amber-500/15 text-amber-700">
+              <Coins className="h-5 w-5" />
+            </div>
+            <div>
+              <h2 className="text-base font-semibold text-gray-900">Corruption Money Tracker</h2>
+              <p className="mt-0.5 text-xs text-gray-500">
+                Each <span className="font-medium">Tiffin Tax</span> complaint adds ৳{TIFFIN_TAX_RATE} to the corruption tally.
+              </p>
+            </div>
+          </div>
+          <div className="flex items-baseline gap-6">
+            <div>
+              <div className="text-3xl font-bold text-amber-700">৳{corruption.totalTk}</div>
+              <div className="text-[11px] uppercase tracking-wide text-gray-500">Total corruption</div>
+            </div>
+            <div>
+              <div className="text-2xl font-semibold text-gray-800">{corruption.count}</div>
+              <div className="text-[11px] uppercase tracking-wide text-gray-500">Complaints</div>
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-5 h-56 w-full">
+          {corruption.daily.length === 0 ? (
+            <div className="flex h-full items-center justify-center rounded-xl border border-dashed border-amber-200 bg-white/60 text-sm text-gray-500">
+              No Tiffin Tax complaints yet.
+            </div>
+          ) : (
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={corruption.daily} margin={{ top: 10, right: 12, left: 0, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
+                <XAxis dataKey="label" fontSize={11} stroke="#94a3b8" tickLine={false} axisLine={false} />
+                <YAxis fontSize={11} stroke="#94a3b8" tickLine={false} axisLine={false}
+                  tickFormatter={(v) => `৳${v}`} />
+                <Tooltip
+                  cursor={{ fill: "rgba(245,158,11,0.08)" }}
+                  formatter={(v: number) => [`৳${v}`, "Corruption"]}
+                  labelClassName="text-xs"
+                />
+                <Bar dataKey="tk" fill="#f59e0b" radius={[6, 6, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          )}
+        </div>
+      </section>
+
+      <section className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
         <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div>
             <h2 className="text-base font-semibold text-gray-900">All Feedback</h2>
