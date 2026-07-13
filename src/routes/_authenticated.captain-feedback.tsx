@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ReactElement } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -12,616 +12,690 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Search, AlertTriangle, ShieldCheck, Clock } from "lucide-react";
+import {
+  ShieldAlert, ShieldCheck, Eye, Search, Loader2, Send, Eraser,
+  AlertTriangle, CheckCircle2, Clock, FileText, Filter, Inbox,
+  UserCog, TrendingUp, X, ChevronLeft, ChevronRight,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Badge } from "@/components/ui/badge";
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
-import { Coins } from "lucide-react";
+import {
+  BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
+  PieChart, Pie, Cell, Legend,
+} from "recharts";
 
-const TIFFIN_TAX_RATE = 2; // taka per Tiffin Tax complaint
+/* ────────────────────────────────────────────────────────────────
+   Config
+   ──────────────────────────────────────────────────────────────── */
 
-const CATEGORIES = ["Academic", "Behavior", "Leadership", "Fund Issue", "Communication", "Tiffin Tax", "Other"] as const;
+const CATEGORIES = [
+  "Forced Payment (2 Taka Collection)",
+  "Food Theft",
+  "Bullying",
+  "Misbehavior",
+  "Abuse of Authority",
+  "Other",
+] as const;
+type Category = (typeof CATEGORIES)[number];
 
-const schema = z.object({
-  target_captain_id: z.string().uuid("Select a captain"),
-  title: z.string().trim().min(1, "Title is required").max(120, "Max 120"),
-  description: z.string().trim().min(20, "At least 20 characters").max(1000, "Max 1000"),
-  category: z.enum(["", ...CATEGORIES] as [string, ...string[]]).optional(),
-});
-type FormValues = z.infer<typeof schema>;
+const MIN_DESC = 30;
+const MAX_DESC = 800;
 
-type Captain = { id: string; full_name: string };
-type CapFeedback = {
-  id: string;
-  target_captain_id: string;
-  status: "Pending" | "Verified" | "Rejected";
-  created_at: string;
+/* Warning model: derived from feedback.status.
+   Verified => 1 warning issued. Rejected => resolved (no warning).
+   Pending  => under review. */
+type ReportStatus = "Pending" | "Verified" | "Rejected";
+
+const STATUS_STYLE: Record<ReportStatus, { label: string; cls: string; icon: ReactElement }> = {
+  Pending:  { label: "Pending",  cls: "bg-amber-500/10 text-amber-300 border-amber-500/20", icon: <Clock className="h-3 w-3" /> },
+  Verified: { label: "Warned",   cls: "bg-rose-500/10 text-rose-300 border-rose-500/20",   icon: <ShieldAlert className="h-3 w-3" /> },
+  Rejected: { label: "Resolved", cls: "bg-emerald-500/10 text-emerald-300 border-emerald-500/20", icon: <CheckCircle2 className="h-3 w-3" /> },
 };
 
-type CapFeedbackDetail = CapFeedback & {
+const CHART_COLORS = ["#818cf8", "#f472b6", "#facc15", "#34d399", "#60a5fa", "#fb923c"];
+
+/* ────────────────────────────────────────────────────────────────
+   Types + queries
+   ──────────────────────────────────────────────────────────────── */
+
+type Captain = { id: string; full_name: string };
+type Report = {
+  id: string;
+  target_captain_id: string;
+  status: ReportStatus;
+  created_at: string;
   title: string;
   description: string | null;
   category: string | null;
 };
-
-type Tier = "Safe" | "Warning" | "High Risk" | "Red Alert";
-type Stats = {
-  captain: Captain;
-  total: number;
-  verified: number;
-  pending: number;
-  latestVerifiedAt: string | null;
-  tier: Tier;
-};
-
-const TIER_STYLES: Record<
-  Tier,
-  { border: string; badge: string; dot: string; label: string; ring: string; track: string }
-> = {
-  Safe:        { border: "border-emerald-200",  badge: "bg-emerald-50 text-emerald-700 border border-emerald-100",  dot: "bg-emerald-500", label: "Safe",       ring: "stroke-emerald-500", track: "stroke-emerald-100" },
-  Warning:     { border: "border-yellow-200",   badge: "bg-yellow-50 text-yellow-800 border border-yellow-100",    dot: "bg-yellow-500",  label: "Warning",    ring: "stroke-yellow-500",  track: "stroke-yellow-100" },
-  "High Risk": { border: "border-orange-200",   badge: "bg-orange-50 text-orange-800 border border-orange-100",    dot: "bg-orange-500",  label: "High Risk",  ring: "stroke-orange-500",  track: "stroke-orange-100" },
-  "Red Alert": { border: "border-red-400",      badge: "bg-red-600 text-white",                                    dot: "bg-red-600",     label: "RED ALERT",  ring: "stroke-red-500",     track: "stroke-red-100" },
-};
-
-function tierFor(verified: number): Tier {
-  if (verified >= 3) return "Red Alert";
-  if (verified === 2) return "High Risk";
-  if (verified === 1) return "Warning";
-  return "Safe";
-}
-
-function initials(name: string): string {
-  return name.split(/\s+/).filter(Boolean).slice(0, 2).map((s) => s[0]?.toUpperCase() ?? "").join("");
-}
-
-function fmtDate(iso: string): string {
-  return new Date(iso).toLocaleDateString(undefined, { day: "2-digit", month: "short", year: "numeric" });
-}
+type ReportWithCaptain = Report & { captain: Captain | null };
 
 async function loadCaptains(): Promise<Captain[]> {
   const { data, error } = await supabase
-    .from("users")
-    .select("id, full_name")
-    .eq("role", "captain")
-    .order("full_name");
+    .from("users").select("id, full_name")
+    .eq("role", "captain").order("full_name");
   if (error) throw error;
   return data ?? [];
 }
 
-async function loadCaptainFeedback(): Promise<CapFeedback[]> {
+async function loadAllReports(): Promise<ReportWithCaptain[]> {
   const { data, error } = await supabase
     .from("feedback")
-    .select("id, target_captain_id, status, created_at")
+    .select("id, target_captain_id, status, created_at, title, description, category, captain:users!feedback_target_captain_id_fkey(id, full_name)")
     .eq("feedback_type", "Captain")
     .order("created_at", { ascending: false });
   if (error) throw error;
-  return (data ?? []).filter((r) => r.target_captain_id) as CapFeedback[];
+  return (data ?? []).map((r: any) => ({ ...r, captain: r.captain ?? null })) as ReportWithCaptain[];
 }
 
-function ProgressRing({ value, tier }: { value: number; tier: Tier }) {
-  const t = TIER_STYLES[tier];
-  const pct = Math.min(1, value / 3);
-  const r = 22;
-  const c = 2 * Math.PI * r;
-  return (
-    <svg width="56" height="56" viewBox="0 0 56 56" className="shrink-0 -rotate-90">
-      <circle cx="28" cy="28" r={r} strokeWidth="6" fill="none" className={t.track} />
-      <circle
-        cx="28" cy="28" r={r} strokeWidth="6" fill="none" strokeLinecap="round"
-        className={cn(t.ring, "transition-[stroke-dashoffset] duration-500")}
-        strokeDasharray={c}
-        strokeDashoffset={c * (1 - pct)}
-      />
-      <text x="28" y="32" textAnchor="middle" transform="rotate(90 28 28)"
-        className="fill-foreground text-[13px] font-semibold">
-        {value}/3
-      </text>
-    </svg>
-  );
+/* ────────────────────────────────────────────────────────────────
+   Warning helpers
+   ──────────────────────────────────────────────────────────────── */
+
+function warningTone(count: number): { ring: string; bar: string; text: string; label: string } {
+  if (count >= 3) return { ring: "ring-rose-500/40",   bar: "bg-rose-500",   text: "text-rose-300",   label: "Maximum Warning Reached" };
+  if (count === 2) return { ring: "ring-orange-500/40", bar: "bg-orange-500", text: "text-orange-300", label: "High Risk" };
+  if (count === 1) return { ring: "ring-yellow-500/40", bar: "bg-yellow-500", text: "text-yellow-300", label: "Caution" };
+  return { ring: "ring-emerald-500/30", bar: "bg-emerald-500", text: "text-emerald-300", label: "Clean" };
 }
 
-function CaptainCard({ s, onClick }: { s: Stats; onClick: () => void }) {
-  const t = TIER_STYLES[s.tier];
-  const isRed = s.tier === "Red Alert";
-  const progress = Math.min(3, s.verified);
+function shortId(uuid: string): string {
+  return "RPT-" + uuid.replace(/-/g, "").slice(0, 6).toUpperCase();
+}
+
+function fmtDateTime(iso: string): string {
+  return new Date(iso).toLocaleString(undefined, {
+    day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit",
+  });
+}
+
+/* ────────────────────────────────────────────────────────────────
+   Student form
+   ──────────────────────────────────────────────────────────────── */
+
+const schema = z.object({
+  target_captain_id: z.string().uuid("Select a captain"),
+  category: z.enum(CATEGORIES, { errorMap: () => ({ message: "Select a category" }) }),
+  description: z.string().trim().min(MIN_DESC, `At least ${MIN_DESC} characters`).max(MAX_DESC, `Max ${MAX_DESC}`),
+});
+type FormValues = z.infer<typeof schema>;
+
+function StudentView({ captains, meId }: { captains: Captain[]; meId: string | null }) {
+  const [lastId, setLastId] = useState<string | null>(null);
+  const {
+    register, handleSubmit, watch, reset, formState: { errors, isSubmitting },
+  } = useForm<FormValues>({ resolver: zodResolver(schema), defaultValues: { description: "" } });
+
+  const desc = watch("description") ?? "";
+  const captainId = watch("target_captain_id");
+  const category = watch("category");
+
+  const onSubmit = async (v: FormValues) => {
+    if (!meId) { toast.error("Not signed in"); return; }
+    if (v.target_captain_id === meId) { toast.error("You cannot report yourself"); return; }
+    const title = v.category; // category is the effective subject; keep description as the body
+    const { data, error } = await supabase.from("feedback").insert({
+      created_by: meId,
+      target_captain_id: v.target_captain_id,
+      title,
+      description: v.description,
+      category: v.category,
+      status: "Pending",
+      feedback_type: "Captain",
+    }).select("id").single();
+    if (error) { toast.error(error.message); return; }
+    setLastId(data.id);
+    reset({ target_captain_id: "", category: undefined as any, description: "" });
+    toast.success("Report submitted anonymously");
+  };
+
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={cn(
-        "group relative w-full text-left rounded-2xl border bg-card p-6 shadow-soft card-hover cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-primary",
-        t.border,
-        isRed && "animate-red-alert glow-red",
-      )}
-    >
-      <div className="flex items-start gap-4">
-        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary font-semibold">
-          {initials(s.captain.full_name)}
-        </div>
-        <div className="min-w-0 flex-1">
-          <div className="truncate text-[15px] font-semibold text-foreground">{s.captain.full_name}</div>
-          <span className={cn("mt-1.5 inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide", t.badge)}>
-            {isRed && <AlertTriangle className="h-3 w-3" />}
-            {!isRed && <span className={cn("h-1.5 w-1.5 rounded-full", t.dot)} />}
-            {t.label}
+    <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
+      {/* Form card */}
+      <section className="rounded-2xl border border-white/10 bg-slate-900/40 p-6 shadow-2xl backdrop-blur">
+        <div className="mb-5 flex items-center gap-3">
+          <div className="grid h-10 w-10 place-items-center rounded-xl bg-indigo-500/15 text-indigo-300 ring-1 ring-indigo-500/30">
+            <ShieldCheck className="h-5 w-5" />
+          </div>
+          <div>
+            <h2 className="text-base font-semibold text-slate-100">New Anonymous Report</h2>
+            <p className="text-xs text-slate-400">All fields required. Your identity is not stored on the report.</p>
+          </div>
+          <span className="ml-auto inline-flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-1 text-[11px] font-medium text-emerald-300">
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" /> Anonymous
           </span>
         </div>
-        <ProgressRing value={progress} tier={s.tier} />
-      </div>
-      <div className="mt-5 grid grid-cols-3 gap-2 text-center">
-        <Stat label="Total" value={s.total} />
-        <Stat label="Verified" value={s.verified} tone={isRed ? "text-red-600" : "text-foreground"} />
-        <Stat label="Pending" value={s.pending} tone="text-amber-600" />
-      </div>
-      <div className="mt-4">
-        <div className="mb-1.5 flex items-center justify-between text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-          <span>Verified progress</span>
-          <span className="font-mono">{progress} / 3</span>
-        </div>
-        <div className="flex gap-1">
-          {[0, 1, 2].map((i) => (
-            <div key={i} className={cn(
-              "h-1.5 flex-1 rounded-full transition-colors",
-              i < progress ? (isRed ? "bg-red-500" : "bg-primary") : "bg-muted",
-            )} />
-          ))}
-        </div>
-      </div>
-      {isRed && (
-        <div className="mt-4 flex items-center justify-center gap-2 rounded-xl bg-red-600 px-3 py-2.5 text-sm font-bold uppercase tracking-wider text-white shadow-lift">
-          <AlertTriangle className="h-4 w-4" /> RED ALERT
-        </div>
-      )}
-    </button>
-  );
-}
 
-function Stat({ label, value, tone = "text-gray-900" }: { label: string; value: number; tone?: string }) {
-  return (
-    <div className="rounded-lg bg-gray-50 py-2">
-      <div className={cn("text-lg font-semibold", tone)}>{value}</div>
-      <div className="text-[11px] uppercase tracking-wide text-gray-500">{label}</div>
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div>
+              <Label className="text-slate-300">Captain Name</Label>
+              <select
+                {...register("target_captain_id")}
+                className="mt-1.5 w-full rounded-lg border border-white/10 bg-slate-950/60 px-3 py-2.5 text-sm text-slate-100 outline-none focus:border-indigo-400/50 focus:ring-2 focus:ring-indigo-500/20"
+              >
+                <option value="">Select a captain</option>
+                {captains.filter((c) => c.id !== meId).map((c) => (
+                  <option key={c.id} value={c.id}>{c.full_name}</option>
+                ))}
+              </select>
+              {errors.target_captain_id && <p className="mt-1 text-xs text-rose-400">{errors.target_captain_id.message}</p>}
+            </div>
+            <div>
+              <Label className="text-slate-300">Complaint Category</Label>
+              <select
+                {...register("category")}
+                className="mt-1.5 w-full rounded-lg border border-white/10 bg-slate-950/60 px-3 py-2.5 text-sm text-slate-100 outline-none focus:border-indigo-400/50 focus:ring-2 focus:ring-indigo-500/20"
+              >
+                <option value="">Select a category</option>
+                {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
+              </select>
+              {errors.category && <p className="mt-1 text-xs text-rose-400">{errors.category.message}</p>}
+            </div>
+          </div>
+
+          <div>
+            <div className="flex items-center justify-between">
+              <Label className="text-slate-300">Description</Label>
+              <span className={cn(
+                "text-xs tabular-nums",
+                desc.length < MIN_DESC ? "text-rose-400" : desc.length > MAX_DESC ? "text-rose-400" : "text-slate-400",
+              )}>
+                {desc.length} / {MAX_DESC}
+              </span>
+            </div>
+            <Textarea
+              rows={6}
+              placeholder="Describe what happened. Be specific: what, when, where. Keep it factual."
+              className="mt-1.5 border-white/10 bg-slate-950/60 text-slate-100 placeholder:text-slate-500 focus-visible:ring-indigo-500/30"
+              {...register("description")}
+            />
+            <div className="mt-1.5 h-1 w-full overflow-hidden rounded-full bg-white/5">
+              <div
+                className={cn(
+                  "h-full transition-all",
+                  desc.length < MIN_DESC ? "bg-rose-500" : desc.length > MAX_DESC * 0.9 ? "bg-orange-400" : "bg-emerald-500",
+                )}
+                style={{ width: `${Math.min(100, (desc.length / MAX_DESC) * 100)}%` }}
+              />
+            </div>
+            {errors.description && <p className="mt-1 text-xs text-rose-400">{errors.description.message}</p>}
+          </div>
+
+          <div className="flex flex-wrap items-center justify-end gap-2 pt-2">
+            <Button
+              type="button"
+              variant="ghost"
+              className="text-slate-400 hover:bg-white/5 hover:text-slate-200"
+              onClick={() => reset({ target_captain_id: "", category: undefined as any, description: "" })}
+            >
+              <Eraser className="mr-1.5 h-4 w-4" /> Clear
+            </Button>
+            <Button
+              type="submit"
+              disabled={isSubmitting || !captainId || !category || desc.length < MIN_DESC}
+              className="bg-indigo-500 text-white hover:bg-indigo-400 disabled:opacity-50"
+            >
+              {isSubmitting ? <Loader2 className="mr-1.5 h-4 w-4 animate-spin" /> : <Send className="mr-1.5 h-4 w-4" />}
+              {isSubmitting ? "Submitting…" : "Submit Report"}
+            </Button>
+          </div>
+
+          {lastId && (
+            <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-4 text-sm text-emerald-200">
+              <div className="flex items-center gap-2 font-semibold">
+                <CheckCircle2 className="h-4 w-4" /> Report submitted
+              </div>
+              <p className="mt-1 text-xs text-emerald-300/80">
+                Your report ID is <span className="font-mono font-semibold">{shortId(lastId)}</span>. Teachers will review it shortly.
+              </p>
+            </div>
+          )}
+        </form>
+      </section>
+
+      {/* Info card */}
+      <aside className="rounded-2xl border border-white/10 bg-gradient-to-br from-indigo-500/10 via-slate-900/40 to-slate-900/40 p-6 shadow-2xl backdrop-blur">
+        <h3 className="text-sm font-semibold text-slate-100">How this works</h3>
+        <p className="mt-1 text-xs text-slate-400">Read before submitting.</p>
+        <ul className="mt-4 space-y-3 text-sm text-slate-300">
+          {[
+            { i: <ShieldCheck className="h-4 w-4" />, t: "Reports are anonymous", d: "Your name is never attached to the report shown to captains." },
+            { i: <AlertTriangle className="h-4 w-4" />, t: "Fake reports are discouraged", d: "False or malicious reports may be rejected." },
+            { i: <UserCog className="h-4 w-4" />, t: "Teachers review reports", d: "Only staff can issue warnings or resolve cases." },
+            { i: <ShieldAlert className="h-4 w-4" />, t: "Identity is never stored", d: "Reports are shown to teachers without your handle." },
+          ].map((x, i) => (
+            <li key={i} className="flex items-start gap-3">
+              <span className="mt-0.5 grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-indigo-500/15 text-indigo-300 ring-1 ring-indigo-500/30">{x.i}</span>
+              <div>
+                <div className="text-sm font-medium text-slate-100">{x.t}</div>
+                <div className="text-xs text-slate-400">{x.d}</div>
+              </div>
+            </li>
+          ))}
+        </ul>
+      </aside>
     </div>
   );
 }
 
-function CaptainFeedbackPage() {
-  const qc = useQueryClient();
-  const meQ = useQuery({ queryKey: ["me"], queryFn: getCurrentAppUser, staleTime: 60_000 });
-  const capsQ = useQuery({ queryKey: ["captains"], queryFn: loadCaptains });
-  const fbQ = useQuery({ queryKey: ["captain-feedback"], queryFn: loadCaptainFeedback });
+/* ────────────────────────────────────────────────────────────────
+   Teacher view
+   ──────────────────────────────────────────────────────────────── */
 
-  const allFbQ = useQuery({
-    queryKey: ["captain-feedback-all"],
-    queryFn: async (): Promise<(CapFeedbackDetail & { captain: Captain | null })[]> => {
-      const { data, error } = await supabase
-        .from("feedback")
-        .select("id, target_captain_id, status, created_at, title, description, category, captain:users!feedback_target_captain_id_fkey(id, full_name)")
-        .eq("feedback_type", "Captain")
-        .order("created_at", { ascending: false });
-      if (error) throw error;
-      return (data ?? []).map((r: any) => ({ ...r, captain: r.captain ?? null }));
-    },
-  });
-  const [allSearch, setAllSearch] = useState("");
-
-  const corruption = useMemo(() => {
-    const rows = (allFbQ.data ?? []).filter((r) => r.category === "Tiffin Tax");
-    const totalTk = rows.length * TIFFIN_TAX_RATE;
-    const byDay: Record<string, number> = {};
-    rows.forEach((r) => {
-      const d = new Date(r.created_at);
-      const key = d.toISOString().slice(0, 10); // YYYY-MM-DD
-      byDay[key] = (byDay[key] ?? 0) + TIFFIN_TAX_RATE;
-    });
-    const daily = Object.entries(byDay)
-      .sort(([a], [b]) => a.localeCompare(b))
-      .map(([date, tk]) => ({
-        date,
-        label: new Date(date).toLocaleDateString(undefined, { day: "2-digit", month: "short" }),
-        tk,
-      }));
-    return { totalTk, count: rows.length, daily };
-  }, [allFbQ.data]);
-
-  const [search, setSearch] = useState("");
-  const [filter, setFilter] = useState<"All" | Tier>("All");
-  const [selectedCaptain, setSelectedCaptain] = useState<Captain | null>(null);
-
-  const detailQ = useQuery({
-    queryKey: ["captain-feedback-detail", selectedCaptain?.id],
-    enabled: !!selectedCaptain,
-    queryFn: async (): Promise<CapFeedbackDetail[]> => {
-      const { data, error } = await supabase
-        .from("feedback")
-        .select("id, target_captain_id, status, created_at, title, description, category")
-        .eq("feedback_type", "Captain")
-        .eq("target_captain_id", selectedCaptain!.id)
-        .order("created_at", { ascending: false });
-      if (error) throw error;
-      return (data ?? []) as CapFeedbackDetail[];
-    },
-  });
-
-  useEffect(() => {
-    const ch = supabase
-      .channel("captain-feedback")
-      .on("postgres_changes", { event: "*", schema: "public", table: "feedback" }, () => {
-        qc.invalidateQueries({ queryKey: ["captain-feedback"] });
-        qc.invalidateQueries({ queryKey: ["captain-feedback-all"] });
-      })
-      .subscribe();
-    return () => { supabase.removeChannel(ch); };
-  }, [qc]);
-
-  const stats: Stats[] = useMemo(() => {
-    const caps = capsQ.data ?? [];
-    const rows = fbQ.data ?? [];
-    return caps.map((c) => {
-      const mine = rows.filter((r) => r.target_captain_id === c.id);
-      const verified = mine.filter((r) => r.status === "Verified");
-      const pending  = mine.filter((r) => r.status === "Pending");
-      return {
-        captain: c,
-        total: mine.length,
-        verified: verified.length,
-        pending: pending.length,
-        latestVerifiedAt: verified[0]?.created_at ?? null,
-        tier: tierFor(verified.length),
-      };
-    });
-  }, [capsQ.data, fbQ.data]);
-
-  const visible = useMemo(() => {
-    return stats
-      .filter((s) => (filter === "All" ? true : s.tier === filter))
-      .filter((s) => s.captain.full_name.toLowerCase().includes(search.trim().toLowerCase()));
-  }, [stats, filter, search]);
-
-  const redAlerts = useMemo(
-    () => stats.filter((s) => s.tier === "Red Alert").sort((a, b) => b.verified - a.verified),
-    [stats],
+function StatTile({
+  label, value, icon, tone,
+}: { label: string; value: number | string; icon: ReactElement; tone: string }) {
+  return (
+    <div className="rounded-2xl border border-white/10 bg-slate-900/40 p-5 shadow-lg backdrop-blur">
+      <div className="flex items-center justify-between">
+        <span className="text-xs font-medium uppercase tracking-wide text-slate-400">{label}</span>
+        <span className={cn("grid h-9 w-9 place-items-center rounded-xl ring-1", tone)}>{icon}</span>
+      </div>
+      <div className="mt-3 text-3xl font-bold text-slate-100 tabular-nums">{value}</div>
+    </div>
   );
+}
 
-  const { register, handleSubmit, watch, reset, setValue, formState: { errors, isSubmitting } } = useForm<FormValues>({
-    resolver: zodResolver(schema),
-    defaultValues: { target_captain_id: "", title: "", description: "", category: "" },
-  });
-  const description = watch("description") ?? "";
+function WarningMeter({ count, name }: { count: number; name: string }) {
+  const capped = Math.min(3, count);
+  const tone = warningTone(capped);
+  return (
+    <div className="rounded-2xl border border-white/10 bg-slate-900/40 p-4">
+      <div className="flex items-center justify-between">
+        <span className="truncate text-sm font-medium text-slate-100">{name}</span>
+        <span className={cn("text-xs font-semibold tabular-nums", tone.text)}>{capped} / 3</span>
+      </div>
+      <div className="mt-2 flex gap-1.5">
+        {[0, 1, 2].map((i) => (
+          <div
+            key={i}
+            className={cn(
+              "h-2 flex-1 rounded-full ring-1 transition-colors",
+              i < capped ? cn(tone.bar, tone.ring) : "bg-white/5 ring-white/10",
+            )}
+          />
+        ))}
+      </div>
+      <div className={cn("mt-2 text-[11px] font-medium uppercase tracking-wide", tone.text)}>{tone.label}</div>
+    </div>
+  );
+}
 
-  const onSubmit = async (v: FormValues) => {
-    if (!meQ.data) { toast.error("Not signed in"); return; }
-    if (v.target_captain_id === meQ.data.id) {
-      toast.error("You cannot submit feedback about yourself");
-      return;
-    }
-    const { error } = await supabase.from("feedback").insert({
-      created_by: meQ.data.id,
-      target_captain_id: v.target_captain_id,
-      title: v.title,
-      description: v.description,
-      category: v.category || null,
-      status: "Pending",
-      feedback_type: "Captain",
+const PAGE_SIZE = 8;
+
+function TeacherView({ reports, captains }: { reports: ReportWithCaptain[]; captains: Captain[] }) {
+  const qc = useQueryClient();
+  const [search, setSearch] = useState("");
+  const [capF, setCapF] = useState<string>("all");
+  const [catF, setCatF] = useState<string>("all");
+  const [statF, setStatF] = useState<string>("all");
+  const [sort, setSort] = useState<"new" | "old">("new");
+  const [page, setPage] = useState(1);
+  const [selected, setSelected] = useState<ReportWithCaptain | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  const filtered = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    let rows = reports.filter((r) => {
+      if (capF !== "all" && r.target_captain_id !== capF) return false;
+      if (catF !== "all" && (r.category ?? "") !== catF) return false;
+      if (statF !== "all" && r.status !== statF) return false;
+      if (!q) return true;
+      return (
+        (r.title ?? "").toLowerCase().includes(q) ||
+        (r.description ?? "").toLowerCase().includes(q) ||
+        (r.captain?.full_name ?? "").toLowerCase().includes(q) ||
+        shortId(r.id).toLowerCase().includes(q)
+      );
     });
-    if (error) { toast.error(error.message); return; }
-    toast.success("Captain feedback submitted");
-    reset();
-  };
+    rows = rows.slice().sort((a, b) => {
+      const t = new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+      return sort === "new" ? -t : t;
+    });
+    return rows;
+  }, [reports, search, capF, catF, statF, sort]);
 
-  const filters: Array<"All" | Tier> = ["All", "Safe", "Warning", "High Risk", "Red Alert"];
+  useEffect(() => { setPage(1); }, [search, capF, catF, statF, sort]);
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const pageRows = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
+  const totals = useMemo(() => {
+    const pending  = reports.filter((r) => r.status === "Pending").length;
+    const resolved = reports.filter((r) => r.status === "Rejected").length;
+    const warned   = reports.filter((r) => r.status === "Verified").length;
+    return { total: reports.length, pending, resolved, warned };
+  }, [reports]);
+
+  const byCategory = useMemo(() => {
+    const m = new Map<string, number>();
+    reports.forEach((r) => { const k = r.category ?? "Other"; m.set(k, (m.get(k) ?? 0) + 1); });
+    return Array.from(m, ([name, value]) => ({ name, value }));
+  }, [reports]);
+
+  const byCaptain = useMemo(() => {
+    const m = new Map<string, { name: string; count: number }>();
+    reports.forEach((r) => {
+      const key = r.target_captain_id;
+      const name = r.captain?.full_name ?? "Unknown";
+      const cur = m.get(key) ?? { name, count: 0 };
+      cur.count += 1; m.set(key, cur);
+    });
+    return Array.from(m.values()).sort((a, b) => b.count - a.count).slice(0, 6);
+  }, [reports]);
+
+  const warningsByCaptain = useMemo(() => {
+    const m = new Map<string, { name: string; warnings: number }>();
+    captains.forEach((c) => m.set(c.id, { name: c.full_name, warnings: 0 }));
+    reports.forEach((r) => {
+      if (r.status !== "Verified") return;
+      const cur = m.get(r.target_captain_id);
+      if (cur) cur.warnings += 1;
+    });
+    return Array.from(m.values()).sort((a, b) => b.warnings - a.warnings);
+  }, [reports, captains]);
+
+  async function updateStatus(id: string, status: ReportStatus) {
+    setBusy(true);
+    const { error } = await supabase.from("feedback").update({ status }).eq("id", id);
+    setBusy(false);
+    if (error) { toast.error(error.message); return; }
+    toast.success(status === "Verified" ? "Warning issued" : status === "Rejected" ? "Report resolved" : "Reopened");
+    qc.invalidateQueries({ queryKey: ["cf-reports"] });
+    setSelected(null);
+  }
 
   return (
-    <PageLayout
-      title="Captain Feedback"
-      description="Submit anonymous feedback about classroom captains to improve classroom management."
-    >
-      {/* Red alert board */}
-      <section className="rounded-2xl border border-red-200 bg-white p-5 shadow-sm">
-        <div className="mb-3 flex items-center gap-2">
-          <AlertTriangle className="h-5 w-5 text-red-600" />
-          <h2 className="text-base font-semibold text-gray-900">Captain Alert Board</h2>
-          <span className="ml-auto text-xs text-gray-500">{redAlerts.length} on RED ALERT</span>
+    <div className="space-y-8">
+      {/* Stats */}
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <StatTile label="Total Reports"   value={totals.total}    icon={<FileText className="h-4 w-4" />}    tone="bg-indigo-500/10 text-indigo-300 ring-indigo-500/30" />
+        <StatTile label="Pending"         value={totals.pending}  icon={<Clock className="h-4 w-4" />}       tone="bg-amber-500/10 text-amber-300 ring-amber-500/30" />
+        <StatTile label="Resolved"        value={totals.resolved} icon={<CheckCircle2 className="h-4 w-4" />} tone="bg-emerald-500/10 text-emerald-300 ring-emerald-500/30" />
+        <StatTile label="Warnings Issued" value={totals.warned}   icon={<ShieldAlert className="h-4 w-4" />} tone="bg-rose-500/10 text-rose-300 ring-rose-500/30" />
+      </div>
+
+      {/* Filters */}
+      <section className="rounded-2xl border border-white/10 bg-slate-900/40 p-4 shadow-lg backdrop-blur">
+        <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_repeat(4,minmax(0,auto))]">
+          <div className="relative">
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
+            <Input
+              placeholder="Search ID, captain, keyword…"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="pl-9 border-white/10 bg-slate-950/60 text-slate-100 placeholder:text-slate-500"
+            />
+          </div>
+          <select value={capF} onChange={(e) => setCapF(e.target.value)} className="rounded-lg border border-white/10 bg-slate-950/60 px-3 py-2 text-sm text-slate-100">
+            <option value="all">All Captains</option>
+            {captains.map((c) => <option key={c.id} value={c.id}>{c.full_name}</option>)}
+          </select>
+          <select value={catF} onChange={(e) => setCatF(e.target.value)} className="rounded-lg border border-white/10 bg-slate-950/60 px-3 py-2 text-sm text-slate-100">
+            <option value="all">All Categories</option>
+            {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
+          </select>
+          <select value={statF} onChange={(e) => setStatF(e.target.value)} className="rounded-lg border border-white/10 bg-slate-950/60 px-3 py-2 text-sm text-slate-100">
+            <option value="all">All Status</option>
+            <option value="Pending">Pending</option>
+            <option value="Verified">Warned</option>
+            <option value="Rejected">Resolved</option>
+          </select>
+          <select value={sort} onChange={(e) => setSort(e.target.value as "new" | "old")} className="rounded-lg border border-white/10 bg-slate-950/60 px-3 py-2 text-sm text-slate-100">
+            <option value="new">Newest First</option>
+            <option value="old">Oldest First</option>
+          </select>
         </div>
-        {redAlerts.length === 0 ? (
-          <div className="rounded-lg border border-dashed border-gray-200 bg-gray-50 p-6 text-center text-sm text-gray-500">
-            <ShieldCheck className="mx-auto mb-1 h-5 w-5 text-emerald-500" />
-            No captains on red alert.
+      </section>
+
+      {/* Table */}
+      <section className="overflow-hidden rounded-2xl border border-white/10 bg-slate-900/40 shadow-lg backdrop-blur">
+        <div className="flex items-center justify-between border-b border-white/10 px-5 py-3">
+          <div className="flex items-center gap-2">
+            <Inbox className="h-4 w-4 text-slate-400" />
+            <h3 className="text-sm font-semibold text-slate-100">Reports</h3>
+            <span className="text-xs text-slate-400">({filtered.length})</span>
+          </div>
+          <div className="hidden items-center gap-1 text-xs text-slate-400 md:flex">
+            <Filter className="h-3 w-3" /> {sort === "new" ? "Newest first" : "Oldest first"}
+          </div>
+        </div>
+
+        {filtered.length === 0 ? (
+          <div className="flex flex-col items-center justify-center gap-3 px-6 py-16 text-center">
+            <div className="grid h-16 w-16 place-items-center rounded-2xl bg-white/5 text-slate-500 ring-1 ring-white/10">
+              <Inbox className="h-8 w-8" />
+            </div>
+            <p className="text-sm text-slate-300">No reports submitted yet.</p>
+            <p className="text-xs text-slate-500">When students submit reports, they will appear here.</p>
           </div>
         ) : (
-          <div className="overflow-hidden rounded-lg border border-gray-100">
-            <table className="w-full text-sm">
-              <thead className="bg-gray-50 text-left text-xs uppercase tracking-wide text-gray-500">
-                <tr>
-                  <th className="px-4 py-2">Captain</th>
-                  <th className="px-4 py-2">Verified</th>
-                  <th className="px-4 py-2">Latest Complaint</th>
-                  <th className="px-4 py-2">Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {redAlerts.map((s) => (
-                  <tr key={s.captain.id} className="border-t border-gray-100">
-                    <td className="px-4 py-2 font-medium text-gray-900">{s.captain.full_name}</td>
-                    <td className="px-4 py-2 text-red-600 font-semibold">{s.verified}</td>
-                    <td className="px-4 py-2 text-gray-600">{s.latestVerifiedAt ? fmtDate(s.latestVerifiedAt) : "—"}</td>
-                    <td className="px-4 py-2">
-                      <span className="inline-flex rounded-full bg-red-600 px-2 py-0.5 text-xs font-bold text-white">RED ALERT</span>
-                    </td>
+          <>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-white/10 text-left text-[11px] uppercase tracking-wide text-slate-500">
+                    <th className="px-5 py-3 font-medium">Report ID</th>
+                    <th className="px-5 py-3 font-medium">Captain</th>
+                    <th className="px-5 py-3 font-medium">Category</th>
+                    <th className="px-5 py-3 font-medium">Date</th>
+                    <th className="px-5 py-3 font-medium">Status</th>
+                    <th className="px-5 py-3 text-right font-medium">Action</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {pageRows.map((r) => {
+                    const s = STATUS_STYLE[r.status];
+                    return (
+                      <tr key={r.id} className="border-b border-white/5 last:border-0 hover:bg-white/5">
+                        <td className="px-5 py-3 font-mono text-xs text-indigo-300">{shortId(r.id)}</td>
+                        <td className="px-5 py-3 text-slate-200">{r.captain?.full_name ?? "—"}</td>
+                        <td className="px-5 py-3 text-slate-300">{r.category ?? "—"}</td>
+                        <td className="px-5 py-3 text-slate-400">{fmtDateTime(r.created_at)}</td>
+                        <td className="px-5 py-3">
+                          <span className={cn("inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-medium", s.cls)}>
+                            {s.icon}{s.label}
+                          </span>
+                        </td>
+                        <td className="px-5 py-3 text-right">
+                          <Button
+                            size="sm" variant="ghost"
+                            onClick={() => setSelected(r)}
+                            className="h-8 gap-1 text-indigo-300 hover:bg-indigo-500/10 hover:text-indigo-200"
+                          >
+                            <Eye className="h-4 w-4" /> View
+                          </Button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+            <div className="flex items-center justify-between border-t border-white/10 px-5 py-3 text-xs text-slate-400">
+              <span>Page {page} of {totalPages}</span>
+              <div className="flex gap-1.5">
+                <Button size="sm" variant="ghost" disabled={page <= 1} onClick={() => setPage((p) => p - 1)} className="h-8 text-slate-300 hover:bg-white/5">
+                  <ChevronLeft className="h-4 w-4" /> Prev
+                </Button>
+                <Button size="sm" variant="ghost" disabled={page >= totalPages} onClick={() => setPage((p) => p + 1)} className="h-8 text-slate-300 hover:bg-white/5">
+                  Next <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          </>
         )}
       </section>
 
-      {/* Filters + search */}
-      <section className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-        <div className="relative w-full md:w-72">
-          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-          <Input
-            placeholder="Search captains by name"
-            className="pl-9"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
+      {/* Warnings */}
+      <section className="rounded-2xl border border-white/10 bg-slate-900/40 p-6 shadow-lg backdrop-blur">
+        <div className="mb-4 flex items-center gap-2">
+          <ShieldAlert className="h-4 w-4 text-rose-300" />
+          <h3 className="text-sm font-semibold text-slate-100">Warning Distribution</h3>
+          <span className="ml-auto text-xs text-slate-400">3 warnings = max</span>
         </div>
-        <div className="flex flex-wrap gap-2">
-          {filters.map((f) => (
-            <button
-              key={f}
-              onClick={() => setFilter(f)}
-              className={cn(
-                "rounded-full border px-3 py-1 text-xs font-medium transition",
-                filter === f
-                  ? "border-sky-600 bg-sky-50 text-sky-700"
-                  : "border-gray-200 bg-white text-gray-600 hover:bg-gray-50",
-              )}
-            >
-              {f}
-            </button>
-          ))}
-        </div>
-      </section>
-
-      {/* Captain cards */}
-      <section>
-        {fbQ.isLoading || capsQ.isLoading ? (
-          <div className="text-sm text-gray-500">Loading captains…</div>
-        ) : visible.length === 0 ? (
-          <div className="rounded-xl border border-dashed border-gray-200 bg-white p-8 text-center text-sm text-gray-500">
-            No captains match your filter.
-          </div>
+        {warningsByCaptain.length === 0 ? (
+          <p className="text-sm text-slate-400">No captains registered.</p>
         ) : (
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {visible.map((s) => (
-              <CaptainCard
-                key={s.captain.id}
-                s={s}
-                onClick={() => setSelectedCaptain(s.captain)}
-              />
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {warningsByCaptain.map((w) => (
+              <WarningMeter key={w.name} name={w.name} count={w.warnings} />
             ))}
           </div>
         )}
       </section>
 
-      {/* Submit form */}
-      <section className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
-        <h2 className="text-base font-semibold text-gray-900">Submit Captain Feedback</h2>
-        <p className="mt-1 text-xs text-gray-500">
-          Anonymous. One submission per 24 hours. You cannot submit feedback about yourself.
-        </p>
-        <form onSubmit={handleSubmit(onSubmit)} className="mt-5 grid gap-4 md:grid-cols-2">
-          <div className="md:col-span-1">
-            <Label>Captain *</Label>
-            <select
-              className="mt-1.5 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm"
-              {...register("target_captain_id")}
-            >
-              <option value="">Select a captain</option>
-              {(capsQ.data ?? [])
-                .filter((c) => c.id !== meQ.data?.id)
-                .map((c) => (<option key={c.id} value={c.id}>{c.full_name}</option>))}
-            </select>
-            {errors.target_captain_id && <p className="mt-1 text-xs text-red-600">{errors.target_captain_id.message}</p>}
+      {/* Analytics */}
+      <section className="grid gap-4 lg:grid-cols-2">
+        <div className="rounded-2xl border border-white/10 bg-slate-900/40 p-6 shadow-lg backdrop-blur">
+          <div className="mb-4 flex items-center gap-2">
+            <TrendingUp className="h-4 w-4 text-indigo-300" />
+            <h3 className="text-sm font-semibold text-slate-100">Reports by Category</h3>
           </div>
-          <div>
-            <Label>Category</Label>
-            <select
-              className="mt-1.5 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm"
-              {...register("category")}
-              onChange={(e) => setValue("category", e.target.value as FormValues["category"])}
-            >
-              <option value="">—</option>
-              {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
-            </select>
-          </div>
-          <div className="md:col-span-2">
-            <Label>Title *</Label>
-            <Input className="mt-1.5" {...register("title")} placeholder="Short summary" />
-            {errors.title && <p className="mt-1 text-xs text-red-600">{errors.title.message}</p>}
-          </div>
-          <div className="md:col-span-2">
-            <Label>Description *</Label>
-            <Textarea className="mt-1.5" rows={4} {...register("description")} placeholder="Explain the situation clearly (min 20 characters)…" />
-            <div className="mt-1 flex items-center justify-between text-xs text-gray-500">
-              <span>{errors.description?.message ?? " "}</span>
-              <span>{description.length} / 1000</span>
-            </div>
-          </div>
-          <div className="md:col-span-2">
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? "Submitting…" : "Submit Feedback"}
-            </Button>
-          </div>
-        </form>
-      </section>
-
-      {/* Corruption tracker — driven by Tiffin Tax complaints */}
-      <section id="corruption-money" className="scroll-mt-24 rounded-2xl border border-amber-200 bg-gradient-to-br from-amber-50 to-white p-6 shadow-sm">
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-amber-500/15 text-amber-700">
-              <Coins className="h-5 w-5" />
-            </div>
-            <div>
-              <h2 className="text-base font-semibold text-gray-900">Corruption Money Tracker</h2>
-              <p className="mt-0.5 text-xs text-gray-500">
-                Each <span className="font-medium">Tiffin Tax</span> complaint adds ৳{TIFFIN_TAX_RATE} to the corruption tally.
-              </p>
-            </div>
-          </div>
-          <div className="flex items-baseline gap-6">
-            <div>
-              <div className="text-3xl font-bold text-amber-700">৳{corruption.totalTk}</div>
-              <div className="text-[11px] uppercase tracking-wide text-gray-500">Total corruption</div>
-            </div>
-            <div>
-              <div className="text-2xl font-semibold text-gray-800">{corruption.count}</div>
-              <div className="text-[11px] uppercase tracking-wide text-gray-500">Complaints</div>
-            </div>
+          <div className="h-64">
+            {byCategory.length === 0 ? (
+              <div className="flex h-full items-center justify-center text-sm text-slate-500">No data</div>
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie data={byCategory} dataKey="value" nameKey="name" innerRadius={45} outerRadius={90} paddingAngle={2}>
+                    {byCategory.map((_, i) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />)}
+                  </Pie>
+                  <Tooltip contentStyle={{ background: "#0f172a", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 10, color: "#e2e8f0", fontSize: 12 }} />
+                  <Legend wrapperStyle={{ fontSize: 11, color: "#cbd5e1" }} />
+                </PieChart>
+              </ResponsiveContainer>
+            )}
           </div>
         </div>
 
-        <div className="mt-5 h-56 w-full">
-          {corruption.daily.length === 0 ? (
-            <div className="flex h-full items-center justify-center rounded-xl border border-dashed border-amber-200 bg-white/60 text-sm text-gray-500">
-              No Tiffin Tax complaints yet.
-            </div>
-          ) : (
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={corruption.daily} margin={{ top: 10, right: 12, left: 0, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
-                <XAxis dataKey="label" fontSize={11} stroke="#94a3b8" tickLine={false} axisLine={false} />
-                <YAxis fontSize={11} stroke="#94a3b8" tickLine={false} axisLine={false}
-                  tickFormatter={(v) => `৳${v}`} />
-                <Tooltip
-                  cursor={{ fill: "rgba(245,158,11,0.08)" }}
-                  formatter={(v: number) => [`৳${v}`, "Corruption"]}
-                  labelClassName="text-xs"
-                />
-                <Bar dataKey="tk" fill="#f59e0b" radius={[6, 6, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          )}
+        <div className="rounded-2xl border border-white/10 bg-slate-900/40 p-6 shadow-lg backdrop-blur">
+          <div className="mb-4 flex items-center gap-2">
+            <UserCog className="h-4 w-4 text-pink-300" />
+            <h3 className="text-sm font-semibold text-slate-100">Reports by Captain</h3>
+          </div>
+          <div className="h-64">
+            {byCaptain.length === 0 ? (
+              <div className="flex h-full items-center justify-center text-sm text-slate-500">No data</div>
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={byCaptain} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" vertical={false} />
+                  <XAxis dataKey="name" stroke="#94a3b8" fontSize={11} tickLine={false} axisLine={false} interval={0} angle={-15} height={50} textAnchor="end" />
+                  <YAxis stroke="#94a3b8" fontSize={11} tickLine={false} axisLine={false} allowDecimals={false} />
+                  <Tooltip contentStyle={{ background: "#0f172a", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 10, color: "#e2e8f0", fontSize: 12 }} />
+                  <Bar dataKey="count" fill="#f472b6" radius={[6, 6, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            )}
+          </div>
         </div>
       </section>
 
-      <section className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
-        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-          <div>
-            <h2 className="text-base font-semibold text-gray-900">All Feedback</h2>
-            <p className="mt-1 text-xs text-gray-500">
-              Every captain feedback ever submitted, newest first.
-            </p>
-          </div>
-          <div className="relative w-full md:w-72">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-            <Input
-              placeholder="Search title or description"
-              className="pl-9"
-              value={allSearch}
-              onChange={(e) => setAllSearch(e.target.value)}
-            />
-          </div>
-        </div>
-        <div className="mt-5 space-y-3">
-          {allFbQ.isLoading ? (
-            <div className="py-6 text-center text-sm text-gray-500">Loading feedback…</div>
-          ) : (() => {
-            const q = allSearch.trim().toLowerCase();
-            const rows = (allFbQ.data ?? []).filter((r) =>
-              !q ||
-              (r.title ?? "").toLowerCase().includes(q) ||
-              (r.description ?? "").toLowerCase().includes(q),
-            );
-            if (rows.length === 0) {
-              return <div className="py-6 text-center text-sm text-gray-500">No feedback found.</div>;
-            }
-            return rows.map((r) => (
-              <article key={r.id} className="rounded-xl border border-gray-200 p-4">
-                <h3 className="text-sm font-semibold text-gray-900">{r.title}</h3>
-                <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-gray-500">
-                  <span>About <span className="font-medium text-gray-700">{r.captain?.full_name ?? "Unknown"}</span></span>
-                  {r.category && (
-                    <Badge variant="outline" className="text-[11px] text-gray-600">{r.category}</Badge>
-                  )}
-                  <span className="inline-flex items-center gap-1">
-                    <Clock className="h-3 w-3" />
-                    {new Date(r.created_at).toLocaleString(undefined, {
-                      day: "2-digit", month: "short", year: "numeric",
-                      hour: "2-digit", minute: "2-digit",
-                    })}
-                  </span>
-                </div>
-                {r.description && (
-                  <p className="mt-2 whitespace-pre-wrap text-sm text-gray-700">{r.description}</p>
-                )}
-              </article>
-            ));
-          })()}
-        </div>
-      </section>
-
-      <Dialog open={!!selectedCaptain} onOpenChange={(o) => !o && setSelectedCaptain(null)}>
-        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+      {/* Detail modal */}
+      <Dialog open={!!selected} onOpenChange={(o) => !o && setSelected(null)}>
+        <DialogContent className="max-w-lg border-white/10 bg-slate-950 text-slate-100">
           <DialogHeader>
-            <DialogTitle>
-              Feedback about {selectedCaptain?.full_name}
+            <DialogTitle className="flex items-center gap-2">
+              <span className="font-mono text-sm text-indigo-300">{selected && shortId(selected.id)}</span>
+              {selected && (
+                <span className={cn("inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-medium", STATUS_STYLE[selected.status].cls)}>
+                  {STATUS_STYLE[selected.status].icon}{STATUS_STYLE[selected.status].label}
+                </span>
+              )}
             </DialogTitle>
           </DialogHeader>
-          {detailQ.isLoading ? (
-            <div className="py-8 text-center text-sm text-gray-500">Loading…</div>
-          ) : !detailQ.data || detailQ.data.length === 0 ? (
-            <div className="py-8 text-center text-sm text-gray-500">
-              No feedback submitted about this captain yet.
-            </div>
-          ) : (
-            <div className="space-y-3">
-              <div className="text-xs text-gray-500">
-                Total {detailQ.data.length} feedback{detailQ.data.length === 1 ? "" : "s"}
+          {selected && (
+            <div className="space-y-4 text-sm">
+              <div className="grid grid-cols-2 gap-3 text-xs">
+                <div>
+                  <div className="text-slate-500">Captain</div>
+                  <div className="mt-0.5 text-sm font-medium text-slate-100">{selected.captain?.full_name ?? "—"}</div>
+                </div>
+                <div>
+                  <div className="text-slate-500">Category</div>
+                  <div className="mt-0.5 text-sm font-medium text-slate-100">{selected.category ?? "—"}</div>
+                </div>
+                <div className="col-span-2">
+                  <div className="text-slate-500">Submitted</div>
+                  <div className="mt-0.5 text-sm text-slate-100">{fmtDateTime(selected.created_at)}</div>
+                </div>
               </div>
-              {detailQ.data.map((r) => (
-                <article key={r.id} className="rounded-xl border border-gray-200 p-4">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <h3 className="text-sm font-semibold text-gray-900">{r.title}</h3>
-                    <Badge
-                      variant="outline"
-                      className={cn(
-                        "text-[11px]",
-                        r.status === "Verified" && "bg-emerald-50 text-emerald-700 border-emerald-200",
-                        r.status === "Pending" && "bg-amber-50 text-amber-700 border-amber-200",
-                        r.status === "Rejected" && "bg-gray-100 text-gray-600 border-gray-200",
-                      )}
-                    >
-                      {r.status}
-                    </Badge>
-                    {r.category && (
-                      <Badge variant="outline" className="text-[11px] text-gray-600">
-                        {r.category}
-                      </Badge>
-                    )}
-                  </div>
-                  <div className="mt-1 flex items-center gap-1 text-xs text-gray-500">
-                    <Clock className="h-3 w-3" />
-                    {new Date(r.created_at).toLocaleString(undefined, {
-                      day: "2-digit", month: "short", year: "numeric",
-                      hour: "2-digit", minute: "2-digit",
-                    })}
-                  </div>
-                  {r.description && (
-                    <p className="mt-2 whitespace-pre-wrap text-sm text-gray-700">{r.description}</p>
-                  )}
-                </article>
-              ))}
+              <div>
+                <div className="text-xs text-slate-500">Description</div>
+                <p className="mt-1 whitespace-pre-wrap rounded-xl border border-white/10 bg-slate-900/60 p-3 text-sm text-slate-200">
+                  {selected.description || "—"}
+                </p>
+              </div>
+              <div className="flex flex-wrap justify-end gap-2 pt-2">
+                <Button variant="ghost" className="text-slate-400 hover:bg-white/5 hover:text-slate-200" onClick={() => setSelected(null)}>
+                  <X className="mr-1.5 h-4 w-4" /> Close
+                </Button>
+                <Button
+                  variant="ghost" disabled={busy || selected.status === "Rejected"}
+                  onClick={() => updateStatus(selected.id, "Rejected")}
+                  className="text-emerald-300 hover:bg-emerald-500/10 hover:text-emerald-200"
+                >
+                  <CheckCircle2 className="mr-1.5 h-4 w-4" /> Resolve
+                </Button>
+                <Button
+                  disabled={busy || selected.status === "Verified"}
+                  onClick={() => updateStatus(selected.id, "Verified")}
+                  className="bg-rose-500 text-white hover:bg-rose-400"
+                >
+                  <ShieldAlert className="mr-1.5 h-4 w-4" /> Issue Warning
+                </Button>
+              </div>
             </div>
           )}
         </DialogContent>
       </Dialog>
-    </PageLayout>
+    </div>
+  );
+}
+
+/* ────────────────────────────────────────────────────────────────
+   Page
+   ──────────────────────────────────────────────────────────────── */
+
+function CaptainFeedbackPage() {
+  const qc = useQueryClient();
+  const meQ = useQuery({ queryKey: ["me"], queryFn: getCurrentAppUser, staleTime: 60_000 });
+  const capsQ = useQuery({ queryKey: ["captains"], queryFn: loadCaptains });
+  const reportsQ = useQuery({ queryKey: ["cf-reports"], queryFn: loadAllReports });
+
+  useEffect(() => {
+    const ch = supabase
+      .channel("captain-feedback-live")
+      .on("postgres_changes", { event: "*", schema: "public", table: "feedback" }, () => {
+        qc.invalidateQueries({ queryKey: ["cf-reports"] });
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(ch); };
+  }, [qc]);
+
+  const role = meQ.data?.role;
+  // "Teacher" surface is enabled for captains (staff proxy) since app has no teacher role.
+  const isStaff = role === "captain";
+
+  return (
+    <div className="min-h-full bg-gradient-to-b from-slate-950 via-slate-950 to-slate-900 text-slate-100">
+      <PageLayout
+        title="Anonymous Captain Feedback"
+        description="Your identity will never be shared."
+      >
+        {meQ.isLoading || capsQ.isLoading || reportsQ.isLoading ? (
+          <div className="flex items-center gap-2 rounded-2xl border border-white/10 bg-slate-900/40 p-6 text-sm text-slate-300">
+            <Loader2 className="h-4 w-4 animate-spin" /> Loading…
+          </div>
+        ) : isStaff ? (
+          <TeacherView reports={reportsQ.data ?? []} captains={capsQ.data ?? []} />
+        ) : (
+          <StudentView captains={capsQ.data ?? []} meId={meQ.data?.id ?? null} />
+        )}
+      </PageLayout>
+    </div>
   );
 }
 
