@@ -16,6 +16,10 @@ import { Search, AlertTriangle, ShieldCheck, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
+import { Coins } from "lucide-react";
+
+const TIFFIN_TAX_RATE = 2; // taka per Tiffin Tax complaint
 
 const CATEGORIES = ["Academic", "Behavior", "Leadership", "Fund Issue", "Communication", "Tiffin Tax", "Other"] as const;
 
@@ -202,6 +206,25 @@ function CaptainFeedbackPage() {
     },
   });
   const [allSearch, setAllSearch] = useState("");
+
+  const corruption = useMemo(() => {
+    const rows = (allFbQ.data ?? []).filter((r) => r.category === "Tiffin Tax");
+    const totalTk = rows.length * TIFFIN_TAX_RATE;
+    const byDay: Record<string, number> = {};
+    rows.forEach((r) => {
+      const d = new Date(r.created_at);
+      const key = d.toISOString().slice(0, 10); // YYYY-MM-DD
+      byDay[key] = (byDay[key] ?? 0) + TIFFIN_TAX_RATE;
+    });
+    const daily = Object.entries(byDay)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([date, tk]) => ({
+        date,
+        label: new Date(date).toLocaleDateString(undefined, { day: "2-digit", month: "short" }),
+        tk,
+      }));
+    return { totalTk, count: rows.length, daily };
+  }, [allFbQ.data]);
 
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<"All" | Tier>("All");
