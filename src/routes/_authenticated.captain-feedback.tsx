@@ -71,11 +71,7 @@ type Report = {
 type ReportWithCaptain = Report & { captain: Captain | null };
 
 async function loadCaptains(): Promise<Captain[]> {
-  const { data, error } = await supabase
-    .from("users").select("id, full_name")
-    .eq("role", "captain")
-    .in("full_name", ["Kudu Kuddus", "Afsan", "Abir"])
-    .order("full_name");
+  const { data, error } = await supabase.rpc("list_captains_safe");
   if (error) throw error;
   return data ?? [];
 }

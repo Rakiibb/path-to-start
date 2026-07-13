@@ -398,6 +398,13 @@ export type Database = {
         Args: { _role: Database["public"]["Enums"]["app_role"] }
         Returns: boolean
       }
+      list_captains_safe: {
+        Args: never
+        Returns: {
+          full_name: string
+          id: string
+        }[]
+      }
       list_seat_roster: {
         Args: never
         Returns: {
