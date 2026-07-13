@@ -159,9 +159,8 @@ export const loginWithSecretCode = createServerFn({ method: "POST" })
     };
   });
 
-// Simple fixed login for the requested two-option auth screen.
-// Student uses ID: student / Password: 1234
-// Teacher uses ID: teacher / Password: 1234 (stored as captain internally for permissions).
+// Simple fixed login for the requested shared auth screen.
+// All fixed/demo logins use Password: 1234 and must stay regular students.
 export const loginWithFixedAccount = createServerFn({ method: "POST" })
   .inputValidator((input) =>
     z.object({
@@ -176,26 +175,46 @@ export const loginWithFixedAccount = createServerFn({ method: "POST" })
 
     const account = data.accountType === "teacher"
       ? {
-          id: "teacher",
+          ids: ["teacher", "teacher01"],
           password: "1234",
-          fullName: "Teacher",
+          fullName: "Guest Student",
           rollNumber: "fixed_teacher",
           secretCode: "fixed_teacher",
+          legacyRollNumbers: ["fixed_teacher", "teacher", "teacher01"],
+          legacySecretCodes: ["fixed_teacher", "teacher", "teacher01"],
           role: "student" as const,
-          activity: "Teacher Login",
+          activity: "Student Login",
         }
       : {
-          id: "student",
+          ids: ["student"],
           password: "1234",
           fullName: "Student",
           rollNumber: "fixed_student",
           secretCode: "fixed_student",
+          legacyRollNumbers: ["fixed_student", "student"],
+          legacySecretCodes: ["fixed_student", "student"],
           role: "student" as const,
           activity: "Student Login",
         };
 
-    if (data.id.trim().toLowerCase() !== account.id || data.password !== account.password) {
+    if (!account.ids.includes(data.id.trim().toLowerCase()) || data.password !== account.password) {
       throw new Error("Invalid ID or password.");
+    }
+
+    // Clean up older fixed/demo rows that may have been created as captains.
+    for (const secretCode of account.legacySecretCodes) {
+      const { error } = await supabaseAdmin
+        .from("users")
+        .update({ role: account.role })
+        .eq("secret_code", secretCode);
+      if (error) throw new Error(error.message);
+    }
+    for (const rollNumber of account.legacyRollNumbers) {
+      const { error } = await supabaseAdmin
+        .from("users")
+        .update({ role: account.role })
+        .eq("roll_number", rollNumber);
+      if (error) throw new Error(error.message);
     }
 
     const fixedUserSelect = "id, auth_user_id, full_name, role";
@@ -285,10 +304,11 @@ export const loginWithFixedAccount = createServerFn({ method: "POST" })
     const user = fixedUser;
     // Ensure the fixed account never carries elevated privileges.
     if (user.role !== account.role) {
-      await supabaseAdmin
+      const { error: roleErr } = await supabaseAdmin
         .from("users")
         .update({ role: account.role })
         .eq("id", user.id);
+      if (roleErr) throw new Error(roleErr.message);
       user.role = account.role;
     }
     const email = `user-${user.id}@smartclass.local`;
@@ -319,7 +339,7 @@ export const loginWithFixedAccount = createServerFn({ method: "POST" })
         action: account.activity,
         entity: "auth",
         entity_id: user.id,
-        details: { role: data.accountType },
+        details: { role: user.role, login_type: data.accountType === "teacher" ? "default" : "student" },
       });
     } catch (_e) {
       // don't block login on logging failure
@@ -329,7 +349,7 @@ export const loginWithFixedAccount = createServerFn({ method: "POST" })
       access_token: signIn.session.access_token,
       refresh_token: signIn.session.refresh_token,
       firstLogin: false,
-      user: { id: user.id, full_name: account.fullName, role: user.role },
+      user: { id: user.id, full_name: account.fullName, role: account.role },
     };
   });
 

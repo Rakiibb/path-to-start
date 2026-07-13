@@ -17,7 +17,7 @@ function LoginPage() {
   const [loading, setLoading] = useState(false);
 
   const demo = loginType === "teacher"
-    ? { id: "teacher", password: "1234", label: "Teacher" }
+    ? { id: "teacher01", password: "1234", label: "Default Student" }
     : { id: "student", password: "1234", label: "Student" };
 
   function selectType(type: "student" | "teacher") {
@@ -55,7 +55,7 @@ function LoginPage() {
           </div>
           <h1 className="mt-4 text-2xl font-semibold text-gray-900">Welcome to SmartClass</h1>
           <p className="mt-1 text-sm text-gray-500">
-            Choose Student or Teacher login, then enter the ID and password.
+            Choose a login, then enter the ID and password.
           </p>
         </div>
 
@@ -82,7 +82,7 @@ function LoginPage() {
             }`}
           >
             <School className="h-4 w-4" />
-            Teacher Login
+            Default Login
           </button>
         </div>
 

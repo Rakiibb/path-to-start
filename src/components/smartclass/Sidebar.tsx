@@ -42,8 +42,7 @@ export function Sidebar() {
     queryFn: getCurrentAppUser,
     staleTime: 60_000,
   });
-  // Everyone (students and captains) sees the same navigation.
-  const allItems = [...items, ...extraItems];
+  const allItems = session?.role === "captain" ? [...items, ...extraItems] : items;
 
   const [collapsed, setCollapsed] = useState<boolean>(false);
   useEffect(() => {
