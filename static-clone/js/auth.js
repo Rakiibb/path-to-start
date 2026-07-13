@@ -18,10 +18,10 @@ var _students = [
 
 window.SC_ACCOUNTS = {};
 
-// Captain (single fixed account) — real name + title are public.
+// Default shared account — logs in as a regular student (no captain rule).
 window.SC_ACCOUNTS["teacher01"] = {
-  code: "teacher01", password: "1234", role: "captain",
-  name: "Mr. Karim", roll: "T-01", title: "Teacher",
+  code: "teacher01", password: "1234", role: "student",
+  name: "Guest Student", roll: "00",
 };
 
 // Students — auto-generated code becomes their login ID.
