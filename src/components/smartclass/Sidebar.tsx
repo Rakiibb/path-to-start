@@ -20,7 +20,7 @@ import { cn } from "@/lib/utils";
 
 const items = [
   { to: "/", label: "Dashboard", icon: LayoutDashboard },
-  { to: "/captain-feedback", hash: "corruption-money", label: "Corruption Money", icon: Coins },
+  { to: "/corruption-money", label: "Corruption Money", icon: Coins },
   { to: "/seat-planner", label: "Seat Planner", icon: LayoutGrid },
   { to: "/sos", label: "SOS", icon: Siren },
   { to: "/school-rules", label: "School Rules", icon: BookOpen },
@@ -91,13 +91,11 @@ export function Sidebar() {
       <nav className="flex-1 space-y-0.5 p-3">
         {allItems.map((item) => {
           const { to, label, icon: Icon } = item;
-          const hash = "hash" in item ? item.hash : undefined;
-          const active = pathname === to && (hash ? currentHash === hash : !currentHash);
+          const active = pathname === to && !currentHash;
           return (
             <Link
-              key={`${to}-${hash ?? "page"}`}
+              key={to}
               to={to}
-              hash={hash}
               title={collapsed ? label : undefined}
               className={cn(
                 "group relative flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium",
