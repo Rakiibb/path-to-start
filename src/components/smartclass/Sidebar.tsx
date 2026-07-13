@@ -92,7 +92,9 @@ export function Sidebar() {
         </button>
       )}
       <nav className="flex-1 space-y-0.5 p-3">
-        {allItems.map(({ to, hash, label, icon: Icon }) => {
+        {allItems.map((item) => {
+          const { to, label, icon: Icon } = item;
+          const hash = "hash" in item ? item.hash : undefined;
           const active = pathname === to && (hash ? currentHash === hash : !currentHash);
           return (
             <Link
