@@ -75,7 +75,9 @@ function DashboardView() {
   const verified = feedback.filter((f) => f.status === "Verified").length;
   const fundTotal = feedback.reduce((sum, f) => sum + Number(f.amount ?? 0), 0);
   const activeSos = sos.filter((s) => s.status === "Active");
-  const recentFeedback = feedback.slice(0, 4);
+  const recentFeedback = feedback
+    .filter((f) => (f as any).feedback_type === "Captain")
+    .slice(0, 4);
   const votesByFeedback = new Map<string, FeedbackVote[]>();
   for (const v of votes) {
     const list = votesByFeedback.get(v.feedback_id) ?? [];
