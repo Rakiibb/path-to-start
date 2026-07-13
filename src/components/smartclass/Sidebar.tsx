@@ -20,7 +20,7 @@ import { cn } from "@/lib/utils";
 
 const items = [
   { to: "/", label: "Dashboard", icon: LayoutDashboard },
-  { to: "/captain-feedback", hash: "corruption-money", label: "Corruption Money", icon: Coins },
+  { to: "/corruption-money", label: "Corruption Money", icon: Coins },
   { to: "/seat-planner", label: "Seat Planner", icon: LayoutGrid },
   { to: "/sos", label: "SOS", icon: Siren },
   { to: "/school-rules", label: "School Rules", icon: BookOpen },

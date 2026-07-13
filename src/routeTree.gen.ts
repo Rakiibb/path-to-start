@@ -20,6 +20,7 @@ import { Route as AuthenticatedSeatPlannerRouteImport } from './routes/_authenti
 import { Route as AuthenticatedSchoolRulesRouteImport } from './routes/_authenticated.school-rules'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated.profile'
 import { Route as AuthenticatedNotificationsRouteImport } from './routes/_authenticated.notifications'
+import { Route as AuthenticatedCorruptionMoneyRouteImport } from './routes/_authenticated.corruption-money'
 import { Route as AuthenticatedClassFeedbackRouteImport } from './routes/_authenticated.class-feedback'
 import { Route as AuthenticatedCaptainFeedbackListRouteImport } from './routes/_authenticated.captain-feedback-list'
 import { Route as AuthenticatedCaptainFeedbackRouteImport } from './routes/_authenticated.captain-feedback'
@@ -84,6 +85,12 @@ const AuthenticatedNotificationsRoute =
     path: '/notifications',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedCorruptionMoneyRoute =
+  AuthenticatedCorruptionMoneyRouteImport.update({
+    id: '/corruption-money',
+    path: '/corruption-money',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedClassFeedbackRoute =
   AuthenticatedClassFeedbackRouteImport.update({
     id: '/class-feedback',
@@ -123,6 +130,7 @@ export interface FileRoutesByFullPath {
   '/captain-feedback': typeof AuthenticatedCaptainFeedbackRoute
   '/captain-feedback-list': typeof AuthenticatedCaptainFeedbackListRoute
   '/class-feedback': typeof AuthenticatedClassFeedbackRoute
+  '/corruption-money': typeof AuthenticatedCorruptionMoneyRoute
   '/notifications': typeof AuthenticatedNotificationsRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/school-rules': typeof AuthenticatedSchoolRulesRoute
@@ -139,6 +147,7 @@ export interface FileRoutesByTo {
   '/captain-feedback': typeof AuthenticatedCaptainFeedbackRoute
   '/captain-feedback-list': typeof AuthenticatedCaptainFeedbackListRoute
   '/class-feedback': typeof AuthenticatedClassFeedbackRoute
+  '/corruption-money': typeof AuthenticatedCorruptionMoneyRoute
   '/notifications': typeof AuthenticatedNotificationsRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/school-rules': typeof AuthenticatedSchoolRulesRoute
@@ -158,6 +167,7 @@ export interface FileRoutesById {
   '/_authenticated/captain-feedback': typeof AuthenticatedCaptainFeedbackRoute
   '/_authenticated/captain-feedback-list': typeof AuthenticatedCaptainFeedbackListRoute
   '/_authenticated/class-feedback': typeof AuthenticatedClassFeedbackRoute
+  '/_authenticated/corruption-money': typeof AuthenticatedCorruptionMoneyRoute
   '/_authenticated/notifications': typeof AuthenticatedNotificationsRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/_authenticated/school-rules': typeof AuthenticatedSchoolRulesRoute
@@ -178,6 +188,7 @@ export interface FileRouteTypes {
     | '/captain-feedback'
     | '/captain-feedback-list'
     | '/class-feedback'
+    | '/corruption-money'
     | '/notifications'
     | '/profile'
     | '/school-rules'
@@ -194,6 +205,7 @@ export interface FileRouteTypes {
     | '/captain-feedback'
     | '/captain-feedback-list'
     | '/class-feedback'
+    | '/corruption-money'
     | '/notifications'
     | '/profile'
     | '/school-rules'
@@ -212,6 +224,7 @@ export interface FileRouteTypes {
     | '/_authenticated/captain-feedback'
     | '/_authenticated/captain-feedback-list'
     | '/_authenticated/class-feedback'
+    | '/_authenticated/corruption-money'
     | '/_authenticated/notifications'
     | '/_authenticated/profile'
     | '/_authenticated/school-rules'
@@ -307,6 +320,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedNotificationsRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/corruption-money': {
+      id: '/_authenticated/corruption-money'
+      path: '/corruption-money'
+      fullPath: '/corruption-money'
+      preLoaderRoute: typeof AuthenticatedCorruptionMoneyRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/class-feedback': {
       id: '/_authenticated/class-feedback'
       path: '/class-feedback'
@@ -351,6 +371,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedCaptainFeedbackRoute: typeof AuthenticatedCaptainFeedbackRoute
   AuthenticatedCaptainFeedbackListRoute: typeof AuthenticatedCaptainFeedbackListRoute
   AuthenticatedClassFeedbackRoute: typeof AuthenticatedClassFeedbackRoute
+  AuthenticatedCorruptionMoneyRoute: typeof AuthenticatedCorruptionMoneyRoute
   AuthenticatedNotificationsRoute: typeof AuthenticatedNotificationsRoute
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
   AuthenticatedSchoolRulesRoute: typeof AuthenticatedSchoolRulesRoute
@@ -367,6 +388,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedCaptainFeedbackRoute: AuthenticatedCaptainFeedbackRoute,
   AuthenticatedCaptainFeedbackListRoute: AuthenticatedCaptainFeedbackListRoute,
   AuthenticatedClassFeedbackRoute: AuthenticatedClassFeedbackRoute,
+  AuthenticatedCorruptionMoneyRoute: AuthenticatedCorruptionMoneyRoute,
   AuthenticatedNotificationsRoute: AuthenticatedNotificationsRoute,
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
   AuthenticatedSchoolRulesRoute: AuthenticatedSchoolRulesRoute,
